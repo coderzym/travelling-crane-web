@@ -10,7 +10,8 @@ const WIDTH = 992; // 参考自 Bootstrap 的响应式设计
 
 export default {
   watch: {
-    $route(route) {
+    // $route(route) {
+    $route() {
       // 路由变化时，如果设备为移动端且侧边栏为打开状态，此时关闭侧边栏（带动画）
       if (this.device === "mobile" && this.sidebar.opened) {
         store.dispatch("app/closeSideBar", { withoutAnimation: false });

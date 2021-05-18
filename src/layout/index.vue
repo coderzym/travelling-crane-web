@@ -14,18 +14,12 @@
         <tags-view v-if="needTagsView" />
       </div>
       <app-main />
-      <!-- 右侧容器 -->
-      <right-panel v-if="showSettings">
-        <settings />
-      </right-panel>
     </div>
   </div>
 </template>
 
 <script>
-// 右边设置的侧边栏
-import RightPanel from "@/components/RightPanel";
-import { AppMain, Navbar, Settings, Sidebar, TagsView } from "./components";
+import { AppMain, Navbar, Sidebar, TagsView } from "./components";
 import ResizeMixin from "./mixin/ResizeHandler";
 import { mapState } from "vuex";
 
@@ -34,8 +28,6 @@ export default {
   components: {
     AppMain,
     Navbar,
-    RightPanel,
-    Settings,
     Sidebar,
     TagsView,
   },
@@ -72,9 +64,10 @@ export default {
 
 .app-wrapper {
   @include clearfix;
+
   position: relative;
-  height: 100%;
   width: 100%;
+  height: 100%;
 
   &.mobile.openSidebar {
     position: fixed;
@@ -83,13 +76,13 @@ export default {
 }
 
 .drawer-bg {
+  position: absolute;
+  top: 0;
+  z-index: 999;
+  width: 100%;
+  height: 100%;
   background: #000;
   opacity: 0.3;
-  width: 100%;
-  top: 0;
-  height: 100%;
-  position: absolute;
-  z-index: 999;
 }
 
 .fixed-header {

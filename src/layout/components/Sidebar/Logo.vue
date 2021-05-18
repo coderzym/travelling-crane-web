@@ -2,18 +2,21 @@
   <div class="sidebar-logo-container" :class="{ collapse: collapse }">
     <transition name="sidebarLogoFade">
       <router-link v-if="collapse" key="collapse" class="sidebar-logo-link" to="/">
-        <img v-if="logo" :src="logo" class="sidebar-logo" />
-        <h1 v-else class="sidebar-title">{{ title }} </h1>
+        <!-- 折叠侧边栏后只显示logo -->
+        <img :src="logoImg" class="logo-img" />
       </router-link>
       <router-link v-else key="expand" class="sidebar-logo-link" to="/">
-        <img v-if="logo" :src="logo" class="sidebar-logo" />
-        <h1 class="sidebar-title">{{ title }} </h1>
+        <img :src="logoImg" class="logo-img" />
+        <img :src="logoTitle" class="logo-title" />
       </router-link>
     </transition>
   </div>
 </template>
 
 <script>
+import logoImg from "@/assets/logo/logo-img.png";
+import logoTitle from "@/assets/logo/logo-title.png";
+
 export default {
   name: "SidebarLogo",
   props: {
@@ -24,8 +27,9 @@ export default {
   },
   data() {
     return {
-      title: "Vue Element Admin",
-      logo: "https://wpimg.wallstcn.com/69a1c46c-eb1c-4b46-8bd4-e9e686ef5251.png",
+      title: "智能行车平台",
+      logoImg,
+      logoTitle,
     };
   },
 };
@@ -53,24 +57,27 @@ export default {
   background: $logoBg;
 
   & .sidebar-logo-link {
+    display: flex !important;
     width: 100%;
-    height: 100%;
+    height: 54px;
+    justify-content: center !important;
+    align-items: center !important;
 
-    & .sidebar-logo {
-      width: 32px;
+    & .logo-img {
+      width: 30px;
       height: 32px;
-      margin-right: 12px;
-      vertical-align: middle;
     }
 
-    & .sidebar-title {
-      display: inline-block;
-      margin: 0;
-      font-family: Avenir, Helvetica Neue, Arial, Helvetica, sans-serif;
-      font-size: 14px;
-      font-weight: 600;
-      line-height: 50px;
-      color: #fff;
+    & .logo-title {
+      width: 160px;
+      height: 24px;
+      margin-left: 10px;
+    }
+
+    & .sidebar-logo {
+      width: 100%;
+      height: 45px;
+      padding: 10px 10px 0 10px;
       vertical-align: middle;
     }
   }

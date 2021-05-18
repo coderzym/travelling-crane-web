@@ -37,13 +37,6 @@ export default {
     getBreadcrumb() {
       // 只显示 meta.title 的路由
       let matched = this.$route.matched.filter(item => item.meta && item.meta.title);
-      // [{
-      // meta: {
-      //    icon: "guide"
-      //    noCache: true
-      //    title: "Guide"
-      // }
-      // }]
       const first = matched[0];
 
       // 如果不是，就往后拼接 Home/Guide | Home/Permission/Page Permission

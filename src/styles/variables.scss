@@ -63,6 +63,18 @@ $sideBarWidth: 300px; // 侧边栏宽度
 $switchBg: #8b8b8b;
 $switchActiveBg: #0a75ff;
 
+// 状态色
+$disconnect: linear-gradient(0deg, #263657 0%, #5c7297 100%); // 通讯断开
+$offline: linear-gradient(0deg, #2c2f36 0%, #5d6a73 100%); // 脱机
+$standby: linear-gradient(0deg, #38907d 0%, #59bca7 100%); // 待机
+$operation: linear-gradient(0deg, #2586c4 0%, #43a8f6 100%); // 作业
+$fault: linear-gradient(0deg, #ec510e 0%, #f48b40 100%); // 故障
+$hcBlue: #31b7fe;
+$hcDarkgrey: #666;
+$hcRed: #ff4141;
+$hcGreen: #50af99;
+$hcOrange: #f59913;
+
 $sw-xs: 0;
 $sw-sm: 576px;
 $sw-md: 768px;

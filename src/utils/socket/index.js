@@ -1,4 +1,5 @@
 import { Heart } from "./Heart";
+import appConfig from "@/config/index";
 
 export class Socket extends Heart {
   ws = null;
@@ -8,7 +9,7 @@ export class Socket extends Heart {
   RECONNECT_COUNT = -1; // 变量保存，防止丢失
 
   OPTIONS = {
-    baseURL: process.env.VUE_APP_WS_API, // 链接通道的BASE地址
+    baseURL: appConfig.wsURL, // 链接通道的BASE地址
     reqURL: "", // 链接通道的REQUEST地址
     heartTime: 5000, // 心跳时间间隔
     heartMsg: "ping", // 心跳信息,默认为'ping'

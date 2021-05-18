@@ -1,13 +1,20 @@
 <!-- home -->
 <template>
-  <div class="app-container">
-    <h1>{{ title }}</h1>
-    <!-- vuex->demo下的getters -->
-    <div>{{ getName }}</div>
-    <!-- 全局 getters 中的 token -->
-    <div>{{ token }}</div>
-    <!-- 组件 -->
-    <sub-comp></sub-comp>
+  <!-- 首页 -->
+  <div
+    v-loading="!isConnect"
+    class="app-container home-container"
+    element-loading-text="正在连接中"
+    element-loading-spinner="el-icon-loading"
+    element-loading-background="rgba(0, 0, 0, 0.8)"
+  >
+    <!-- 整体状态(地面工作台) -->
+    <overview
+      :studio="studio"
+      :center-control-studio="centerControlStudio"
+      @toggleOverviewNetwork="toggleOverviewNetwork"
+      @toggleCenterControlNetwork="toggleCenterControlNetwork"
+    />
   </div>
 </template>
 

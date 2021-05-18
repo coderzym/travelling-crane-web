@@ -51,6 +51,14 @@ module.exports = {
       },
     },
   },
+  css: {
+    loaderOptions: {
+      sass: {
+        // 新版sass-loader，选项名使用prepend
+        prependData: `@import "./src/styles/variables.scss";`,
+      },
+    },
+  },
   chainWebpack(config) {
     // 它可以提高首屏加载的速度,建议预加载
     config.plugin("preload").tap(() => [

@@ -2,14 +2,14 @@
   <div class="login-container">
     <el-form ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" autocomplete="on" label-position="left">
       <div class="title-container">
-        <h3 class="title">Login Form</h3>
+        <h3 class="title">行车后台管理系统 - 登录</h3>
       </div>
 
       <el-form-item prop="username">
         <span class="svg-container">
           <svg-icon icon-class="user" />
         </span>
-        <el-input ref="username" v-model="loginForm.username" placeholder="Username" name="username" type="text" tabindex="1" autocomplete="on" />
+        <el-input ref="username" v-model="loginForm.username" placeholder="用户名" name="username" type="text" tabindex="1" autocomplete="on" />
       </el-form-item>
 
       <el-tooltip v-model="capsTooltip" content="Caps lock is On" placement="right" manual>
@@ -22,7 +22,7 @@
             ref="password"
             v-model="loginForm.password"
             :type="passwordType"
-            placeholder="Password"
+            placeholder="密码"
             name="password"
             tabindex="2"
             autocomplete="on"
@@ -36,20 +36,7 @@
         </el-form-item>
       </el-tooltip>
 
-      <el-button :loading="loading" type="primary" style="width: 100%; margin-bottom: 30px" @click.native.prevent="handleLogin">Login</el-button>
-
-      <div style="position: relative">
-        <div class="tips">
-          <span>Username : admin</span>
-          <span>Password : any</span>
-        </div>
-        <div class="tips">
-          <span style="margin-right: 18px">Username : editor</span>
-          <span>Password : any</span>
-        </div>
-
-        <el-button class="thirdparty-button" type="primary" @click="showDialog = true"> Or connect with </el-button>
-      </div>
+      <el-button :loading="loading" type="primary" style="width: 100%; margin-bottom: 30px" @click.native.prevent="handleLogin">登录</el-button>
     </el-form>
 
     <el-dialog title="Or connect with" :visible.sync="showDialog">
@@ -72,14 +59,14 @@ export default {
   data() {
     const validateUsername = (rule, value, callback) => {
       if (!validUsername(value)) {
-        callback(new Error("Please enter the correct user name"));
+        callback(new Error("请输入正确的用户名"));
       } else {
         callback();
       }
     };
     const validatePassword = (rule, value, callback) => {
       if (value.length < 6) {
-        callback(new Error("The password can not be less than 6 digits"));
+        callback(new Error("密码不能小于6位数"));
       } else {
         callback();
       }
@@ -192,6 +179,7 @@ export default {
 
 <style lang="scss">
 /* 修复input 背景不协调 和光标变色 */
+
 /* Detail see https://github.com/PanJiaChen/vue-element-admin/pull/927 */
 
 $bg: #283443;
@@ -208,31 +196,31 @@ $cursor: #fff;
 .login-container {
   .el-input {
     display: inline-block;
-    height: 47px;
     width: 85%;
+    height: 47px;
 
     input {
-      background: transparent;
-      border: 0px;
-      -webkit-appearance: none;
-      border-radius: 0px;
+      height: 47px;
       padding: 12px 5px 12px 15px;
       color: $light_gray;
-      height: 47px;
+      background: transparent;
+      border: 0;
+      border-radius: 0;
+      -webkit-appearance: none;
       caret-color: $cursor;
 
       &:-webkit-autofill {
-        box-shadow: 0 0 0px 1000px $bg inset !important;
+        box-shadow: 0 0 0 1000px $bg inset !important;
         -webkit-text-fill-color: $cursor !important;
       }
     }
   }
 
   .el-form-item {
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(0, 0, 0, 0.1);
-    border-radius: 5px;
     color: #454545;
+    background: rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
   }
 }
 </style>
@@ -243,10 +231,10 @@ $dark_gray: #889aa4;
 $light_gray: #eee;
 
 .login-container {
-  min-height: 100%;
   width: 100%;
-  background-color: $bg;
+  min-height: 100%;
   overflow: hidden;
+  background-color: $bg;
 
   .login-form {
     position: relative;
@@ -258,9 +246,9 @@ $light_gray: #eee;
   }
 
   .tips {
+    margin-bottom: 10px;
     font-size: 14px;
     color: #fff;
-    margin-bottom: 10px;
 
     span {
       &:first-of-type {
@@ -270,29 +258,29 @@ $light_gray: #eee;
   }
 
   .svg-container {
+    display: inline-block;
+    width: 30px;
     padding: 6px 5px 6px 15px;
     color: $dark_gray;
     vertical-align: middle;
-    width: 30px;
-    display: inline-block;
   }
 
   .title-container {
     position: relative;
 
     .title {
+      margin: 0 auto 40px auto;
       font-size: 26px;
-      color: $light_gray;
-      margin: 0px auto 40px auto;
-      text-align: center;
       font-weight: bold;
+      color: $light_gray;
+      text-align: center;
     }
   }
 
   .show-pwd {
     position: absolute;
-    right: 10px;
     top: 7px;
+    right: 10px;
     font-size: 16px;
     color: $dark_gray;
     cursor: pointer;

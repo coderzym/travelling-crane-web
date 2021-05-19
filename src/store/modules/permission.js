@@ -1,4 +1,5 @@
 import { asyncRoutes, constantRoutes } from "@/router";
+import storage from "@/utils/storage/index";
 
 /**
  * 使用 meta.role 来确定当前用户许可
@@ -6,11 +7,14 @@ import { asyncRoutes, constantRoutes } from "@/router";
  * @param route
  */
 function hasPermission(roles, route) {
-  if (route.meta && route.meta.roles) {
-    return roles.some(role => route.meta.roles.includes(role));
-  } else {
-    return true;
-  }
+  // if (route.meta && route.meta.roles) {
+  //   return roles.some(role => route.meta.roles.includes(role));
+  // } else {
+  //   return true;
+  // }
+  const menu = storage.getMenu() || [];
+  console.log({ menu, name: route.name });
+  return menu.findIndex(v => v.menuCode === route.name) > -1 || route.path === "*";
 }
 
 /**

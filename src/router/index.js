@@ -82,6 +82,19 @@ export const constantRoutes = [
  * the routes that need to be dynamically loaded based on user roles
  */
 export const asyncRoutes = [
+  {
+    path: "/warehouse-inventory",
+    component: Layout,
+    name: "WarehouseInventory",
+    children: [
+      {
+        path: "index",
+        component: () => import("@/views/warehouse-inventory/index"),
+        name: "WarehouseInventory",
+        meta: { title: "库区盘存", icon: "库区盘存", affix: false, menu: "WarehouseInventory" },
+      },
+    ],
+  },
   // {
   //   path: "/permission",
   //   component: Layout,

@@ -38,14 +38,6 @@
 
       <el-button :loading="loading" type="primary" style="width: 100%; margin-bottom: 30px" @click.native.prevent="handleLogin">登录</el-button>
     </el-form>
-
-    <el-dialog title="Or connect with" :visible.sync="showDialog">
-      Can not be simulated on local, so please combine you own business simulation! ! !
-      <br />
-      <br />
-      <br />
-      <social-sign />
-    </el-dialog>
   </div>
 </template>
 
@@ -63,8 +55,8 @@ export default {
       }
     };
     const validatePassword = (rule, value, callback) => {
-      if (value.length < 6) {
-        callback(new Error("密码不能小于6位数"));
+      if (value.length < 4) {
+        callback(new Error("密码不能小于4位数"));
       } else {
         callback();
       }
@@ -72,7 +64,7 @@ export default {
     return {
       loginForm: {
         username: "admin",
-        password: "111111",
+        password: "123456",
       },
       loginRules: {
         username: [{ required: true, trigger: "blur", validator: validateUsername }],
@@ -81,7 +73,6 @@ export default {
       passwordType: "password",
       capsTooltip: false,
       loading: false,
-      showDialog: false,
       redirect: undefined,
       otherQuery: {},
     };

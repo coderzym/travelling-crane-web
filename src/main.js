@@ -67,6 +67,18 @@ function prototypeEx(Vue) {
 // 扩展vue原型属性
 prototypeEx(Vue);
 
+// 注册全局组件
+const componentsContext = require.context("./components", true, /index.vue$/);
+// 组件白名单
+const componentWhiteList = ["MainHeader"];
+// 循环注册全局组件
+componentsContext.keys().forEach(component => {
+  const componentConfig = componentsContext(component).default;
+  if (componentWhiteList.includes(componentConfig.name)) {
+    Vue.component(componentConfig.name, componentConfig);
+  }
+});
+
 new Vue({
   el: "#app",
   router,

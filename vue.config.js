@@ -55,7 +55,7 @@ module.exports = {
     loaderOptions: {
       sass: {
         // 新版sass-loader，选项名使用prepend
-        prependData: `@import "./src/styles/variables.scss";`,
+        prependData: `@import "~@/styles/variables.scss";`,
       },
     },
   },

@@ -71,7 +71,7 @@ export const constantRoutes = [
         path: "home",
         component: () => import("@/views/home/home.vue"),
         name: "Home",
-        meta: { title: "首页", icon: "dashboard", affix: true, noCache: true },
+        meta: { title: "首页", icon: "首页", affix: true, noCache: true },
       },
     ],
   },

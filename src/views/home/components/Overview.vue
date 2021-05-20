@@ -1,6 +1,6 @@
 <template>
   <div class="overview-container">
-    <div class="inner-wrapper d-flex flex-wrap a-center j-start" style="float: left; margin-right: 200px">
+    <div class="inner-wrapper d-inline-flex flex-wrap a-center j-start">
       <div class="item d-flex a-center j-start">
         地面工作台：<span class="first" :class="[studioStatus(studio.status).class]">{{ studioStatus(studio.status).desc }}</span>
       </div>
@@ -17,7 +17,7 @@
         />
       </div>
     </div>
-    <div class="inner-wrapper d-flex flex-wrap a-center j-start">
+    <div class="inner-wrapper d-inline-flex flex-wrap a-center j-start">
       <div class="item d-flex a-center j-start">
         中控操作站：<span class="first" :class="[studioStatus(centerControlStudio.status).class]">{{ studioStatus(centerControlStudio.status).desc }}</span>
       </div>

@@ -1,5 +1,6 @@
 // 组件
 import Overview from "./components/Overview";
+import HcCards from "./components/HcCards";
 
 // api
 import $home from "@/api/home";
@@ -57,6 +58,7 @@ export default {
   },
   components: {
     Overview,
+    HcCards,
   },
   mounted() {
     // 初始化ws
@@ -212,6 +214,99 @@ export default {
       console.log("data", { data });
       this.centerControlStudio.networkState = data !== null ? val : !val;
       this.centerControlStudio.disabled = false;
+    },
+    /**
+     * ! ---------------------- 行车滚动卡片 ----------------------
+     */
+    // 切换行车网络连接
+    async toggleNetwork(hc, val) {
+      console.log("toggleNetwork 网络连接", val);
+      let target = this.hcCardsArr.find(card => card.code === hc.code);
+      if (target) {
+        const result = await $hc.toggleConnect({
+          code: target.code,
+          onOrOff: val,
+        });
+        // 失败时，恢复网络连接状态
+        if (!result) {
+          target.networkState = !target.networkState;
+        }
+      }
+    },
+    // 切换行车设备状态
+    async toggleStatus(hc, val) {
+      console.log("toggleStatus 设备状态", val);
+      let target = this.hcCardsArr.find(card => card.code === hc.code);
+      if (target) {
+        const result = await $hc.toggleOnline({
+          code: target.code,
+          onOrOff: val,
+        });
+        // 失败时，恢复网络设备状态
+        if (!result) {
+          target.deviceState = !target.deviceState;
+        }
+      }
+    },
+    // 切换行车手动-自动状态
+    async toggleAutoMode(hc, val) {
+      console.log("toggleAutoMode 手动-自动状态", val);
+      let target = this.hcCardsArr.find(card => card.code === hc.code);
+      if (target) {
+        const result = await $hc.toggleAutoMode({
+          code: target.code,
+          onOrOff: val,
+        });
+        if (result !== null) {
+          target.workPattern = !target.workPattern;
+        }
+      }
+    },
+    // 故障复位
+    triggerReset(hc) {
+      let target = this.hcCardsArr.find(card => card.code === hc.code);
+      if (target) {
+        this.$confirm
+          .handleConfirm(`是否确认对${hc.name}实施故障复位操作？`, "故障复位操作提醒")
+          .then(async res => {
+            console.log("故障复位操作提醒", res);
+            let result = await $hc.triggerReset({
+              code: target.code,
+            });
+            if (result !== null) {
+              this.$message({
+                type: "success",
+                message: "复位成功",
+              });
+            }
+          })
+          .catch(() => {
+            // console.log('已取消');
+          });
+      }
+    },
+    // 急停
+    async triggerStop(hc) {
+      let target = this.hcCardsArr.find(card => card.code === hc.code);
+      if (target) {
+        this.$confirm
+          .handleConfirm(`是否确认对${hc.name}实施急停操作？急停会强行中止行车作业？`, "急停操作提醒")
+          .then(async res => {
+            console.log("急停操作提醒", res);
+            let result = await $hc.triggerStop({
+              code: target.code,
+            });
+            if (result !== null) {
+              this.$message({
+                type: "success",
+                message: "急停成功",
+              });
+            }
+          })
+          .catch(() => {
+            // console.log('已取消');
+          });
+      }
     },
   },
 };

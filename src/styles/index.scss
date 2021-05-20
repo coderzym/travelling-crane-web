@@ -644,6 +644,10 @@ body {
   display: flex;
 }
 
+.d-inline-flex {
+  display: inline-flex;
+}
+
 .d-block {
   display: block;
 }
@@ -1445,4 +1449,111 @@ body {
 
 .pr-5 {
   padding-right: 50px;
+}
+
+// 行车作业任务状态
+.hc-tasks-status {
+  position: relative;
+  display: inline-block;
+  padding-left: 20px;
+  font-family: Microsoft YaHei;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 40px;
+  color: $hcDarkgrey;
+
+  &::before {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 10px;
+    height: 10px;
+    background: currentColor;
+    border-radius: 50%;
+    content: "";
+    transform: translate(0, -50%);
+  }
+
+  &.orange {
+    color: $hcOrange;
+  }
+
+  &.red {
+    color: $hcRed;
+
+    &.animate::before {
+      animation: light-up 1s infinite ease-in-out;
+    }
+  }
+
+  &.blue {
+    color: $hcBlue;
+  }
+
+  &.green {
+    color: $hcGreen;
+  }
+
+  /* 发光动画 */
+  @keyframes light-up {
+    0% {
+      box-shadow: 0 0 5px 1px #ff4141;
+    }
+
+    50% {
+      box-shadow: 0 0 10px 5px #ff4141;
+    }
+
+    100% {
+      box-shadow: 0 0 5px 1px #ff4141;
+    }
+  }
+}
+
+// 行车控制任务作业状态按钮
+.hc-control-task-btns {
+  .btn {
+    width: 90px;
+    height: 32px;
+    margin: 6px 8px;
+    color: $hcBlue;
+    cursor: pointer;
+    border: 1px solid $hcBlue;
+    border-radius: 4px;
+
+    &:hover {
+      color: #fff;
+      background-color: $hcBlue;
+    }
+
+    &.orange {
+      color: $hcOrange;
+      border: 1px solid $hcOrange;
+
+      &:hover {
+        color: #fff;
+        background-color: $hcOrange;
+      }
+    }
+
+    &.green {
+      color: $hcGreen;
+      border: 1px solid $hcGreen;
+
+      &:hover {
+        color: #fff;
+        background-color: $hcGreen;
+      }
+    }
+
+    &.red {
+      color: $hcRed;
+      border: 1px solid $hcRed;
+
+      &:hover {
+        color: #fff;
+        background-color: $hcRed;
+      }
+    }
+  }
 }

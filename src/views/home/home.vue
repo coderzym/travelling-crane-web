@@ -15,6 +15,18 @@
       @toggleOverviewNetwork="toggleOverviewNetwork"
       @toggleCenterControlNetwork="toggleCenterControlNetwork"
     />
+
+    <!-- 行车列表(卡片形式) -->
+    <hc-cards
+      ref="hcCards"
+      :cards="hcCardsArr"
+      class="pt-2"
+      @toggleNetwork="toggleNetwork"
+      @toggleStatus="toggleStatus"
+      @toggleAutoMode="toggleAutoMode"
+      @triggerReset="triggerReset"
+      @triggerStop="triggerStop"
+    />
   </div>
 </template>
 

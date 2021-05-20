@@ -18,8 +18,8 @@ const login = params => {
   return request.post(urlLists.login, params);
 };
 
-const logout = () => {
-  return request.get(urlLists.logout);
+const logout = (params = {}) => {
+  return request.get(urlLists.logout, params);
 };
 
 const getUsers = params => {
@@ -27,7 +27,7 @@ const getUsers = params => {
 };
 
 const addUser = params => {
-  return request.post(urlLists.addUser, params);
+  return request.post(urlLists.addUserRole, params);
 };
 
 const delUsers = params => {

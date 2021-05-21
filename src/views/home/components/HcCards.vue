@@ -16,6 +16,7 @@
                 v-model="card.networkState"
                 :active-color="activeColor"
                 :inactive-color="inactiveColor"
+                :disabled="card.networkDisabled"
                 :class="{ 'sw-inactive': !card.networkState }"
                 @change="_toggleNetwork(card, $event)"
               />
@@ -26,6 +27,7 @@
                 v-model="card.deviceState"
                 :active-color="activeColor"
                 :inactive-color="inactiveColor"
+                :disabled="card.deviceDisabled"
                 :class="{ 'sw-inactive': !card.deviceState }"
                 @change="_toggleStatus(card, $event)"
               />
@@ -74,7 +76,6 @@
 
 <script>
 import textUnderline from "@/assets/common/text-underline.png";
-import { throttle } from "@/utils/index";
 import enums from "@/utils/enum";
 import variables from "@/styles/variables.scss";
 export default {
@@ -105,7 +106,7 @@ export default {
       default: () => ({}),
     },
   },
-  data: function () {
+  data() {
     return {
       textUnderline,
       activeColor: variables.switchActiveBg,
@@ -145,13 +146,13 @@ export default {
       });
     },
     // 切换网络连接
-    _toggleNetwork: throttle(function (card, val) {
+    _toggleNetwork(card, val) {
       this.$emit("toggleNetwork", card, val);
-    }, 1500),
+    },
     // 切换设备状态
-    _toggleStatus: throttle(function (card, val) {
+    _toggleStatus(card, val) {
       this.$emit("toggleStatus", card, val);
-    }, 1500),
+    },
     // 切换手动-自动
     _toggleAutoMode(card, val) {
       this.$emit("toggleAutoMode", card, val);

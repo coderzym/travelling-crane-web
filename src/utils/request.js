@@ -99,79 +99,49 @@ service.interceptors.response.use(
    * 你也可以通过HTTP状态码来判断
    */
   response => {
-    const httpStatus = Number(response.status);
-    const resCode = Number(response.data.resCode || response.data.code);
-    const msg = response.data.msg;
+    // res：真正的data
+    const res = response.data;
+    const code = Number(res.resCode || res.code);
+    const msg = res.msg;
+    let result = res.data;
 
-    if (httpStatus !== 200) {
-      if (httpStatus >= 400 && httpStatus < 500) {
-        Message.warning({
-          message: "网络错误",
-        });
-      } else {
-        Message.warning({
-          message: "服务器错误",
-        });
-      }
-      return Promise.reject(response);
-    }
     // 不是10000，不管data是啥，return null
-    if (resCode !== 10000) {
-      if (resCode === 10016) {
-        store.dispatch("user/resetToken");
-      }
+    if (code !== 10000) {
       Message.warning({
-        message: msg,
+        message: msg || "出错了 o(╥﹏╥)o，请稍后重试",
       });
-      return null;
-    }
-    if (response.data.data == null) {
-      if (resCode === 10000) {
-        response.data.data = true;
+      return Promise.resolve([msg, undefined]);
+    } else {
+      // 请求成功，data为null
+      if (result == null) {
+        result = true;
       }
     }
+
     // 1. code === 10000;
     //  1.1 result为null;return true
     //  1.2 result不是null,return对应值
     // 2. code !== 10000;
     //  1.1 不管result是什么，都return null
-    return response.data.data;
-
-    // TODO: 下面是原vue-element-admin业务逻辑
-    // const res = response.data;
-    // // 如果自定义代码不是20000,则视为error
-    // if (res.code !== 20000) {
-    //   Message({
-    //     message: res.message || 'Error',
-    //     type: 'error',
-    //     duration: 5 * 1000
-    //   });
-
-    //   // 50008: 非法的token令牌; 50012: 其他客户登录; 50014: token令牌过期;
-    //   if (res.code === 50008 || res.code === 50012 || res.code === 50014) {
-    //     // 重新登录
-    //     MessageBox.confirm('您的登录状态已过期，您可以重新登录或者继续停留在此页面', '确认注销', {
-    //       confirmButtonText: '重新登录',
-    //       cancelButtonText: '取消',
-    //       type: 'warning'
-    //     }).then(() => {
-    //       store.dispatch('user/resetToken').then(() => {
-    //         location.reload();
-    //       });
-    //     });
-    //   }
-    //   return Promise.reject(new Error(res.message || 'Error'));
-    // }
-    // return res;
+    return Promise.resolve([undefined, res.data]);
   },
   error => {
+    // 异常处理
     console.log("err" + error); // for debug
+    let msg = "";
+    const { code, message } = error;
+    if (code === "ECONNABORTED" || message === "Network Error") {
+      msg = "出错了 o(╥﹏╥)o，请稍后重试";
+    } else {
+      msg = error.message;
+    }
+
     Message({
-      message: error.message,
+      message: msg,
       type: "error",
       duration: 5 * 1000,
     });
-    return Promise.reject(error);
+    return Promise.resolve([error, undefined]);
   },
 );
 

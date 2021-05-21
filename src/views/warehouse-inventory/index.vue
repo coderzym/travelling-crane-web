@@ -123,11 +123,11 @@ export default {
       this.endList = [];
       this.searchQuery.startDate = "";
       this.searchQuery.endData = "";
-      const startData = await $api.queryWarehouseScan({ craneCode: this.searchQuery.CCode, type: "0" });
+      const [, startData] = await $api.queryWarehouseScan({ craneCode: this.searchQuery.CCode, type: "0" });
       startData.forEach(item => {
         this.startList.push({ name: item.name, key: item.maxCar });
       });
-      const endData = await $api.queryWarehouseScan({ craneCode: this.searchQuery.CCode, type: "1" });
+      const [, endData] = await $api.queryWarehouseScan({ craneCode: this.searchQuery.CCode, type: "1" });
       endData.forEach(item => {
         this.endList.push({ name: item.name, key: item.maxCar });
       });
@@ -143,12 +143,13 @@ export default {
     },
     // 库存分页
     async pageStock() {
-      let beforePage = await $zong.getReservoirList();
+      let [, beforePage] = await $zong.getReservoirList();
       let pageObj = {
         size: this.searchQuery.size,
         current: this.searchQuery.current,
       };
-      const data = await $api.pageStock(pageObj);
+      const [, data] = await $api.pageStock(pageObj);
+      console.log(data);
       this.list = data.records;
       this.list.forEach(item => {
         item.factory = beforePage.records[0].remark;
@@ -164,7 +165,7 @@ export default {
     },
     // 获取行车下拉列表
     async queryCranes() {
-      const data = await $api.queryCranes();
+      const [, data] = await $api.queryCranes();
       if (data) {
         this.queryCranesList = data || [];
       }

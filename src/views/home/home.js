@@ -33,7 +33,7 @@ export default {
 
       studio: initStatus(), // 地面工作台
 
-      centerControlStudio: initCenterControlStatus(), // 中空站
+      centerControlStudio: initCenterControlStatus(), // 中控站
 
       hcCardsArr: [], // 行车卡片列表
 
@@ -117,6 +117,11 @@ export default {
               }
 
               // 行车卡片的更新逻辑
+              data = {
+                ...data,
+                networkDisabled: false,
+                deviceDisabled: false,
+              };
               this.$set(this.hcCardsArr, targetIdx, data);
               // 如果有故障，则弹窗
               if (target.faultStatus) {
@@ -164,7 +169,13 @@ export default {
     refreshUpdateData(data) {
       if (Array.isArray(data)) {
         // 行车（数组）
-        this.hcCardsArr = data;
+        this.hcCardsArr = data.map(hc => {
+          return {
+            ...hc,
+            networkDisabled: false,
+            deviceDisabled: false,
+          };
+        });
         // 初始化新增任务的行车id
         if (this.hcCardsArr.length > 0) {
           const [first] = this.hcCardsArr;
@@ -182,7 +193,8 @@ export default {
     // 请求总库区图纸
     async getPlayground() {
       console.log(1);
-      const data = await $reservoir.getPlayground();
+      const [err, data] = await $reservoir.getPlayground();
+      if (err) return;
       console.log("getPlayground 获取区域图纸", data);
       // 中轴翻转
       // this.axialFlip(data);
@@ -190,60 +202,68 @@ export default {
       this.allinputID = this.playground.input;
     },
     /**
-     * ! ---------------------- 地面工作台 ----------------------
+     * ! ---------------------- 地面工作台、中控操作站 ----------------------
      */
     // 切换studio网络连接
     async toggleOverviewNetwork(val) {
       this.studio.disabled = true;
-      console.log("toggleOverviewNetwork studio网络连接", val);
-      const data = await $hc.toggleGroundConnect({
+      const [, data] = await $hc.toggleGroundConnect({
         onOrOff: val,
       });
-      console.log("val", { val });
-      console.log("data", { data });
-      this.studio.networkState = data !== null ? val : !val;
+      this.studio.networkState = data ? val : !val;
       this.studio.disabled = false;
     },
+    // 切换中控站网络连接
     async toggleCenterControlNetwork(val) {
       this.centerControlStudio.disabled = true;
-      console.log("toggleCenterControlNetwork studio网络连接", val);
-      const data = await $hc.toggleCenterControlConnect({
+      const [, data] = await $hc.toggleCenterControlConnect({
         onOrOff: val,
       });
-      console.log("val", { val });
-      console.log("data", { data });
-      this.centerControlStudio.networkState = data !== null ? val : !val;
+      this.centerControlStudio.networkState = data ? val : !val;
       this.centerControlStudio.disabled = false;
+      // try {
+      //   const data = await $hc.toggleCenterControlConnect({
+      //     onOrOff: val,
+      //   });
+      //   this.centerControlStudio.networkState = data !== null ? val : !val;
+      //   this.centerControlStudio.disabled = false;
+      // } catch (error) {
+      //   this.centerControlStudio.networkState = !val;
+      //   this.centerControlStudio.disabled = false;
+      // }
     },
     /**
      * ! ---------------------- 行车滚动卡片 ----------------------
      */
     // 切换行车网络连接
     async toggleNetwork(hc, val) {
-      console.log("toggleNetwork 网络连接", val);
       let target = this.hcCardsArr.find(card => card.code === hc.code);
+      console.log(target);
       if (target) {
-        const result = await $hc.toggleConnect({
+        target.networkDisabled = true;
+        const [err] = await $hc.toggleConnect({
           code: target.code,
           onOrOff: val,
         });
+        target.networkDisabled = false;
         // 失败时，恢复网络连接状态
-        if (!result) {
+        if (err) {
           target.networkState = !target.networkState;
         }
       }
     },
     // 切换行车设备状态
     async toggleStatus(hc, val) {
-      console.log("toggleStatus 设备状态", val);
       let target = this.hcCardsArr.find(card => card.code === hc.code);
       if (target) {
-        const result = await $hc.toggleOnline({
+        target.deviceDisabled = true;
+        const [err] = await $hc.toggleOnline({
           code: target.code,
           onOrOff: val,
         });
+        target.deviceDisabled = false;
         // 失败时，恢复网络设备状态
-        if (!result) {
+        if (err) {
           target.deviceState = !target.deviceState;
         }
       }
@@ -253,11 +273,11 @@ export default {
       console.log("toggleAutoMode 手动-自动状态", val);
       let target = this.hcCardsArr.find(card => card.code === hc.code);
       if (target) {
-        const result = await $hc.toggleAutoMode({
+        const [, result] = await $hc.toggleAutoMode({
           code: target.code,
           onOrOff: val,
         });
-        if (result !== null) {
+        if (result) {
           target.workPattern = !target.workPattern;
         }
       }
@@ -270,10 +290,10 @@ export default {
           .handleConfirm(`是否确认对${hc.name}实施故障复位操作？`, "故障复位操作提醒")
           .then(async res => {
             console.log("故障复位操作提醒", res);
-            let result = await $hc.triggerReset({
+            let [, result] = await $hc.triggerReset({
               code: target.code,
             });
-            if (result !== null) {
+            if (result) {
               this.$message({
                 type: "success",
                 message: "复位成功",
@@ -293,10 +313,10 @@ export default {
           .handleConfirm(`是否确认对${hc.name}实施急停操作？急停会强行中止行车作业？`, "急停操作提醒")
           .then(async res => {
             console.log("急停操作提醒", res);
-            let result = await $hc.triggerStop({
+            let [, result] = await $hc.triggerStop({
               code: target.code,
             });
-            if (result !== null) {
+            if (result) {
               this.$message({
                 type: "success",
                 message: "急停成功",

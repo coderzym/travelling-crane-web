@@ -85,7 +85,6 @@ export const asyncRoutes = [
   {
     path: "/warehouse-inventory",
     component: Layout,
-    name: "WarehouseInventory",
     children: [
       {
         path: "index",

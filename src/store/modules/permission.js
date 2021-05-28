@@ -13,8 +13,9 @@ function hasPermission(roles, route) {
   //   return true;
   // }
   const menu = storage.getMenu() || [];
-  console.log({ menu, name: route.name });
-  return menu.findIndex(v => v.menuCode === route.name) > -1 || route.path === "*";
+  console.log({ menu, name: route.name, route });
+  // 直接对应 or 路由下有 children，就在 children 下查找
+  return menu.findIndex(v => v.menuCode === route.name || (route.children && route.children.some(c => c.name === v.menuCode))) > -1 || route.path === "*";
 }
 
 /**

@@ -118,18 +118,16 @@ export default {
       });
     },
     handleLogin() {
-      this.$refs.loginForm.validate(valid => {
+      this.$refs.loginForm.validate(async valid => {
         if (valid) {
           this.loading = true;
-          this.$store
-            .dispatch("user/login", this.loginForm)
-            .then(() => {
-              this.$router.push({ path: this.redirect || "/", query: this.otherQuery });
-              this.loading = false;
-            })
-            .catch(() => {
-              this.loading = false;
-            });
+          const [err] = await this.$store.dispatch("user/login", this.loginForm);
+          if (err) {
+            this.loading = false;
+          } else {
+            this.$router.push({ path: this.redirect || "/", query: this.otherQuery });
+            this.loading = false;
+          }
         } else {
           console.log("error submit!!");
           return false;

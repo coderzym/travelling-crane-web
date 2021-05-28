@@ -20,7 +20,6 @@ router.beforeEach(async (to, from, next) => {
 
   // 判断用户是否已经登录
   const hasToken = storage.getToken();
-
   if (hasToken) {
     if (to.path === "/login") {
       // 如果已经登录,重定向到主页
@@ -34,7 +33,6 @@ router.beforeEach(async (to, from, next) => {
         store.commit("user/SET_TOKEN", storage.getToken());
         store.commit("user/SET_USER_INFO", storage.getUserInfo());
         store.commit("user/SET_MENU", storage.getMenu());
-
         // 生成基于当前角色的访问route地图
         const accessRoutes = await store.dispatch("permission/generateRoutes", ["editor"]);
         console.log(accessRoutes);

@@ -21,51 +21,43 @@ const mutations = {
 
 const actions = {
   // user login
-  login({ commit }, userInfo) {
+  async login({ commit }, userInfo) {
     const { username, password } = userInfo;
-    return new Promise((resolve, reject) => {
-      $user
-        .login({ userName: username.trim(), password: password })
-        .then(response => {
-          const { token, menu } = response;
+    const [err, response] = await $user.login({ userName: username.trim(), password: password });
+    if (err) {
+      return Promise.resolve([err, null]);
+    } else {
+      const { token, menu } = response;
 
-          commit("SET_TOKEN", token);
-          commit("SET_USER_INFO", response);
-          commit("SET_MENU", menu);
-          storage.setToken(token);
-          storage.setUserInfo(response);
-          storage.setMenu(menu);
-          resolve();
-        })
-        .catch(error => {
-          reject(error);
-        });
-    });
+      commit("SET_TOKEN", token);
+      commit("SET_USER_INFO", response);
+      commit("SET_MENU", menu);
+      storage.setToken(token);
+      storage.setUserInfo(response);
+      storage.setMenu(menu);
+      return Promise.resolve([null, response]);
+    }
   },
 
   // user logout
-  logout({ commit, dispatch }) {
-    return new Promise((resolve, reject) => {
-      $user
-        .logout()
-        .then(() => {
-          commit("SET_TOKEN", "");
-          commit("SET_USER_INFO", {});
-          // commit("SET_ROLES", []);
-          commit("SET_MENU", []);
-          storage.removeToken();
-          storage.removeUserInfo();
-          storage.removeMenu();
+  async logout({ commit, dispatch }) {
+    const [err, response] = await $user.logout();
+    if (err) {
+      return Promise.resolve([err, null]);
+    } else {
+      commit("SET_TOKEN", "");
+      commit("SET_USER_INFO", {});
+      // commit("SET_ROLES", []);
+      commit("SET_MENU", []);
+      storage.removeToken();
+      storage.removeUserInfo();
+      storage.removeMenu();
 
-          // reset visited views and cached views
-          // to fixed https://github.com/PanJiaChen/vue-element-admin/issues/2485
-          dispatch("tagsView/delAllViews", null, { root: true });
-          resolve();
-        })
-        .catch(error => {
-          reject(error);
-        });
-    });
+      // reset visited views and cached views
+      // to fixed https://github.com/PanJiaChen/vue-element-admin/issues/2485
+      dispatch("tagsView/delAllViews", null, { root: true });
+      return Promise.resolve([null, response]);
+    }
   },
 };
 

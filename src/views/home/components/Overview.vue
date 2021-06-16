@@ -1,11 +1,8 @@
 <template>
   <div class="overview-container">
     <div class="inner-wrapper d-inline-flex flex-wrap a-center j-start">
-      <div class="item d-flex a-center j-start">
-        地面工作台：<span class="first" :class="[studioStatus(studio.status).class]">{{ studioStatus(studio.status).desc }}</span>
-      </div>
+      <div class="item d-flex a-center j-start"> 地面工作台：</div>
       <div class="item">
-        <span>网络连接</span>
         <el-switch
           v-model="studio.networkState"
           :active-color="activeColor"
@@ -18,11 +15,8 @@
       </div>
     </div>
     <div class="inner-wrapper d-inline-flex flex-wrap a-center j-start">
-      <div class="item d-flex a-center j-start">
-        中控操作站：<span class="first" :class="[studioStatus(centerControlStudio.status).class]">{{ studioStatus(centerControlStudio.status).desc }}</span>
-      </div>
+      <div class="item d-flex a-center j-start ml-5"> 中控操作站：</div>
       <div class="item">
-        <span>网络连接</span>
         <el-switch
           v-model="centerControlStudio.networkState"
           :active-color="activeCenterControlColor"
@@ -45,16 +39,14 @@ export default {
       type: Object,
       default: () => ({
         disabled: false, // switch是否可用
-        status: 0, // 地面工作台状态：0 通讯断开 1 脱机 2 待机
-        networkState: false, // 网络状态：true 连接 false 断开
+        networkState: false, // 网络连接状态：true 连接 false 断开
       }),
     },
     centerControlStudio: {
       type: Object,
       default: () => ({
         disabled: false, // switch是否可用
-        status: 0, // 地面工作台状态：0 通讯断开 1 脱机 2 待机
-        networkState: false, // 网络状态：true 连接 false 断开
+        networkState: false, // 网络连接状态：true 连接 false 断开
       }),
     },
     toggleOverviewNetwork: {
@@ -78,17 +70,17 @@ export default {
   },
   watch: {
     studio: {
-      immediate: false,
       deep: true,
-      handler() {
-        this.activeText = "";
+      handler(val, oldVal) {
+        this.activeText = val.disabled ? "请求中..." : val.networkState ? "已连接" : "已断开";
+        this.studio.networkState = val.disabled ? oldVal.networkState : val.networkState;
       },
     },
     centerControlStudio: {
-      immediate: false,
       deep: true,
-      handler() {
-        this.activeCenterControlText = "";
+      handler(val, oldVal) {
+        this.activeCenterControlText = val.disabled ? "请求中..." : val.networkState ? "已连接" : "已断开";
+        this.centerControlStudio.networkState = val.disabled ? oldVal.networkState : val.networkState;
       },
     },
   },
@@ -113,13 +105,6 @@ export default {
       }
       return status;
     },
-    // 状态改变
-    // _toggleOverviewNetwork(val) {
-    //   this.$nextTick(() => {
-    //     this.activeText = val ? '连接中...' : '断开中...';
-    //   });
-    //   this.$emit('toggleOverviewNetwork', val);
-    // },
     _toggleOverviewNetwork(val) {
       this.$nextTick(() => {
         this.activeText = val ? "连接中..." : "断开中...";
@@ -144,8 +129,6 @@ export default {
   border-radius: 4px;
 
   .item {
-    width: 200px;
-    margin-left: 20px;
     font-family: Microsoft YaHei;
     font-size: 18px;
     font-weight: 400;
@@ -153,8 +136,6 @@ export default {
     color: #666;
 
     &:first-of-type {
-      margin-right: 20px;
-      margin-left: 0;
       font-family: Microsoft YaHei;
       font-size: 18px;
       font-weight: bold;

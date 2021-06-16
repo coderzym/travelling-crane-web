@@ -11,7 +11,6 @@ import $hc from "@/api/hc";
 const initStatus = () => {
   return {
     disabled: false, // switch是否可用
-    status: 0, // 地面工作台状态：0 通讯断开 1 脱机 2 待机
     networkState: false, // 网络状态：true 连接 false 断开
   };
 };
@@ -19,7 +18,6 @@ const initStatus = () => {
 const initCenterControlStatus = () => {
   return {
     disabled: false, // switch是否可用
-    status: 0, // 地面工作台状态：0 通讯断开 1 脱机 2 待机
     networkState: false, // 网络状态：true 连接 false 断开
   };
 };
@@ -81,17 +79,16 @@ export default {
         messageCb: res => {
           this.isConnect = true;
           let { code, data } = JSON.parse(res);
-          console.log("messageCb 返回的数据res", JSON.parse(res));
           if (code === 20000) {
-            // 第一次连接 （行车和地面工作台）
+            console.log("ws 行车第一次加载", JSON.parse(res));
+            // 第一次连接 - 行车
             this.refreshUpdateData(data);
           } else if (code === 20100) {
             // 行车的后续更新
             // 更新
             let targetIdx = this.hcCardsArr.findIndex(item => item.code === data.code);
             let target = this.hcCardsArr[targetIdx];
-            console.log("messageCb 更新的目标行车", data);
-            console.log("target", target);
+            console.log("ws 行车单个的后续更新", data, "目标行车", target);
             if (targetIdx > -1) {
               // 行车列表的更新逻辑
               if (data.status !== target.status) {
@@ -138,18 +135,21 @@ export default {
               }
             }
           } else if (code === 20200) {
-            // 地面工作台的后续更新
+            console.log("ws 地面工作台的更新", data);
+            // 地面工作台的更新
             this.studio = {
               ...this.studio,
               ...data,
             };
           } else if (code === 20300) {
-            // 暂时不做处理
+            console.log("ws 中控操作站的更新", data);
+            // 中控操作站的更新
             this.centerControlStudio = {
               ...this.centerControlStudio,
               ...data,
             };
           } else {
+            console.log("ws 失败");
             // 失败
             this.hcCardsArr = [];
             this.studio = initStatus();
@@ -185,9 +185,6 @@ export default {
           this.taskObj.cId = "";
           this.$store.commit("hc/SET_HcLIST", []);
         }
-      } else {
-        // 地面工作台（对象）
-        this.studio = { ...this.studio, ...data };
       }
     },
     // 请求总库区图纸
@@ -221,16 +218,6 @@ export default {
       });
       this.centerControlStudio.networkState = data ? val : !val;
       this.centerControlStudio.disabled = false;
-      // try {
-      //   const data = await $hc.toggleCenterControlConnect({
-      //     onOrOff: val,
-      //   });
-      //   this.centerControlStudio.networkState = data !== null ? val : !val;
-      //   this.centerControlStudio.disabled = false;
-      // } catch (error) {
-      //   this.centerControlStudio.networkState = !val;
-      //   this.centerControlStudio.disabled = false;
-      // }
     },
     /**
      * ! ---------------------- 行车滚动卡片 ----------------------

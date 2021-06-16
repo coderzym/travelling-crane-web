@@ -112,9 +112,9 @@ service.interceptors.response.use(
       });
       return Promise.resolve([msg, undefined]);
     } else {
-      // 请求成功，data为null
+      // 请求成功，data为null（后端没有信息要返回时，data就为null）
       if (result == null) {
-        result = true;
+        result = "后端没有信息要返回时，data就为null";
       }
     }
 

@@ -94,6 +94,18 @@ export const asyncRoutes = [
       },
     ],
   },
+  {
+    path: "/x6",
+    component: Layout,
+    children: [
+      {
+        path: "index",
+        component: () => import("@/views/x6/demo.vue"),
+        name: "x6",
+        meta: { title: "x6的demo", icon: "首页", affix: false, name: "x6" },
+      },
+    ],
+  },
   // {
   //   path: "/permission",
   //   component: Layout,

@@ -66,7 +66,7 @@ export default {
         this.editor.setValue(newValue);
       }
     },
-    language(val) {
+    language() {
       this.destroyEditor();
       this.initEditor();
     },

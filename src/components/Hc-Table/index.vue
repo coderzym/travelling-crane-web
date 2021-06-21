@@ -37,12 +37,12 @@
 
       <el-table-column fixed="right" label="操作" min-width="340" align="center">
         <template slot-scope="scope">
-          <el-button @click="_handleStart(scope.row)" type="text" size="small" class="sw-btn">启动</el-button>
-          <el-button @click="_handleStop(scope.row)" type="text" size="small" class="sw-btn">停止</el-button>
-          <el-button @click="_handlePriority(scope.row)" type="text" size="small" class="sw-btn">优先</el-button>
-          <el-button v-if="scope.row.status == 0" @click="_handleEnableOrDisabled(scope.row)" type="text" size="small" class="sw-btn">启用</el-button>
-          <el-button v-if="scope.row.status == 1" @click="_handleEnableOrDisabled(scope.row)" type="text" size="small" class="sw-btn">禁用</el-button>
-          <el-button @click="_handleDelete(scope.row)" type="text" size="small" class="sw-btn">删除</el-button>
+          <el-button type="text" size="small" class="sw-btn" @click="_handleStart(scope.row)">启动</el-button>
+          <el-button type="text" size="small" class="sw-btn" @click="_handleStop(scope.row)">停止</el-button>
+          <el-button type="text" size="small" class="sw-btn" @click="_handlePriority(scope.row)">优先</el-button>
+          <el-button v-if="scope.row.status == 0" type="text" size="small" class="sw-btn" @click="_handleEnableOrDisabled(scope.row)">启用</el-button>
+          <el-button v-if="scope.row.status == 1" type="text" size="small" class="sw-btn" @click="_handleEnableOrDisabled(scope.row)">禁用</el-button>
+          <el-button type="text" size="small" class="sw-btn" @click="_handleDelete(scope.row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -119,7 +119,6 @@ const taskListField = [
 ];
 const tableHeaderHeight = 46;
 const tableRowHeight = 50;
-import Enums from "@/utils/enum";
 export default {
   name: "HcTable",
   props: {

@@ -7,12 +7,14 @@ export class Enum {
    * field: 枚举字段
    * label: 界面显示
    * value: 枚举值
-   * className: 类名
+   * ext: 额外属性
    */
-  add(field, label, value, className = "") {
-    // 如果className没传，则默认设置为field
-    if (className == "") className = field;
-    this[field] = { label, value, className };
+  add(field, label, value, ext = null) {
+    if (!ext) {
+      ext = {};
+      ext.className = field;
+    }
+    this[field] = { label, value, ext };
     return this;
   }
 
@@ -61,7 +63,7 @@ export class Enum {
     for (const [, val] of Object.entries(this)) {
       if (val.value === value) {
         return {
-          className: val.className,
+          className: val.ext.className,
           label: val.label,
         };
       }

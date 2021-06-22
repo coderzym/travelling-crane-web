@@ -1,27 +1,50 @@
 <!-- 页面名：demo -->
 <template>
+  <!-- 交互
+    1. 没有保存之前，可以随意新增区域。但有重叠的话，矩形会高亮。且没法儿保存
+    2. 点击网格或者节点，顶部可查看当前坐标，方便绘制
+    3. 双击节点，可以直接拖动编辑，或者点击节点，可以在表单设置值
+    4. 顶部选中哪个类型，可以绘制哪种类型的rect
+    5. 可以保存，且保存前要判断是否可提交
+   -->
   <div id="x6" class="app-container x6">
-    <div id="playground-wrapper" class="playground-wrapper"></div>
+    <!-- 工具栏 -->
+    <div class="tools mb-2 d-flex j-sb">
+      <el-radio-group v-model="curType" @change="handleMapTypeChange">
+        <el-radio-button v-for="item in mapTypeObj" :key="item.value" :label="item.value">{{ item.label }}</el-radio-button>
+      </el-radio-group>
+      <el-tag>x: {{ coordinates.x }}, y: {{ coordinates.y }}</el-tag>
+    </div>
+    <!-- 库区图绘制区域 -->
+    <div class="canvas-inner">
+      <div id="canvas"></div>
+    </div>
   </div>
 </template>
 
 <script>
+// x6库
 import { Graph, Shape } from "@antv/x6";
-
+// 接口
 import $reservoir from "@/api/reservoir";
+// 枚举
+import enums from "@/utils/enum/index";
+
+const map = enums.mapEnum;
 
 export default {
-  name: "Demo",
+  name: "X6",
   data() {
     return {
-      mainWidth: 0, // 可用容器宽度
-      canvasW: 0,
-      canvasH: 0,
-      playground: {}, // 库区
+      // NOTE: 画布相关
+      graph: null, // 画布实例
+      mainWidth: 0, // 响应式画布宽度
+      isDraw: false, // 是否正在绘制
       factor: 1, // 比例系数
-      graph: null, // 画布
-      title: "标题",
-      isDraw: false, // 是在绘制
+      coordinates: {
+        x: 0,
+        y: 0,
+      }, // 坐标
       position: {
         x: 0,
         y: 0,
@@ -29,47 +52,135 @@ export default {
         height: 0,
       }, // 位置
       rect: null, // 正在绘制的矩形
+      curType: map.Inlet.value, // 当前选中的类型
+      // NOTE: 库区数据
+      playground: {}, // 库区数据
     };
   },
-  watch: {
-    // mainWidth: {
-    //   immediate: false,
-    //   deep: true,
-    //   handler(newValue) {
-    //     if (newValue && this.playground.warehouse) {
-    //       this.init();
-    //       console.log("屏幕缩放重绘");
-    //     }
-    //   },
-    // },
+  computed: {
+    // 可绘制类型选择
+    mapTypeObj() {
+      return this.$utils.objFilter(map, attr => attr.ext.typeShow === true);
+    },
   },
   // 生命周期 - 挂载完成（访问DOM元素）
   async mounted() {
-    // 监听容器宽度变化
-    this.observe();
     await this.getPlayground();
-    this.calcFactor();
-    // 初始化库区
-    this.initMap();
+    this.init();
+    this.addEvent();
   },
   methods: {
-    observe() {
-      // 监听 自身容器 元素宽度的变化
-      const ro = new ResizeObserver(entries => {
-        for (const entry of entries) {
-          const cr = entry.contentRect;
-          this.mainWidth = cr.width;
+    // NOTE: 库区图绘制相关
+    init() {
+      const { area, input, output, wall, warehouse, maintain } = this.playground;
+
+      // 初始化画布
+      this.graph = new Graph({
+        container: document.getElementById("canvas"),
+        width: 1200,
+        height: 400,
+        background: {
+          color: "#fffbe6",
+        },
+        grid: {
+          size: 500, // 网格大小 10px
+          visible: true, // 渲染网格背景
+          type: "mesh", // 'dot' | 'fixedDot' | 'mesh'
+        },
+        // scroller: true, // 可滚动
+        panning: {
+          enabled: true,
+          modifiers: "shift",
+        },
+        mousewheel: {
+          enabled: true,
+          modifiers: ["ctrl", "meta"],
+        }, // 背景缩放
+        interacting() {
+          // 禁止拖动节点
+          return { nodeMovable: false };
+        },
+      });
+
+      // 库区
+      const warehouseRect = new Shape.Rect({
+        id: map.Warehouse.value + warehouse.id,
+        x: 0,
+        y: 0,
+        width: warehouse.length,
+        height: warehouse.width,
+        attrs: {
+          body: {
+            fill: "rgba(95,149,255,0.05)",
+            stroke: "#000",
+            strokeWidth: 0,
+          },
+        },
+      });
+      this.graph.addNode(warehouseRect);
+
+      // 可抓区域
+      area.forEach(item => {
+        // 抓料区
+        if (item.parentId === 0) {
+          const rect = new Shape.Rect({
+            id: map.Area.value + item.id,
+            x: item.totalX,
+            y: item.totalY,
+            width: item.totalLength,
+            height: item.totalWidth,
+            attrs: {
+              body: {
+                fill: "#2ECC71",
+                stroke: "#000",
+                strokeWidth: 0,
+              },
+              label: {
+                text: item.name,
+                fill: "#333",
+                fontSize: 500 * 2,
+              },
+            },
+          });
+          this.graph.addNode(rect);
         }
       });
-      ro.observe(document.querySelector(".playground-wrapper"));
+
+      this.graph.centerContent();
+      this.graph.zoom(-500);
     },
-    // 请求总库区图纸
+    /**
+     * @description 给画布添加事件
+     */
+    addEvent() {
+      // 鼠标移动中
+      this.graph.on("blank:click", ({ _, x, y }) => {
+        this.coordinates = { x, y };
+      });
+      // 鼠标移动中
+      this.graph.on("node:click", ({ _, x, y }) => {
+        this.coordinates = { x, y };
+      });
+    },
+    // NOTE: 网络请求
+    /**
+     * @description 请求库区图纸
+     */
     async getPlayground() {
       const [err, data] = await $reservoir.getPlayground();
-      console.log("getPlayground 获取区域图纸", data);
+      console.log("获取库区图纸", data);
       if (err) return;
       this.playground = data;
     },
+
+    // NOTE: 事件处理
+    /**
+     * @description 监听要绘制的类型
+     */
+    handleMapTypeChange(value) {
+      this.curType = value;
+    },
+
     // 计算比例
     calcFactor() {
       const { warehouse } = this.playground;
@@ -102,22 +213,21 @@ export default {
     initMap() {
       const { area, input, output, wall, warehouse, maintain } = this.playground;
       const graph = new Graph({
-        container: document.getElementById("playground-wrapper"),
-        width: this.canvasW,
-        height: this.canvasH,
+        container: document.getElementById("canvas"),
+        height: 400,
         background: {
           color: "#fffbe6", // 设置画布背景颜色
         },
         grid: {
-          size: 500 / this.factor, // 网格大小 10px
+          size: 10, // 网格大小 10px
           visible: true, // 渲染网格背景
         },
         interacting() {
           // 禁止拖动节点
           return { nodeMovable: false };
         },
+        autoResize: true,
       });
-
       this.graph = graph;
       const polygon = graph.addNode({
         // shape: "polygon",

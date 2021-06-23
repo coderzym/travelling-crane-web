@@ -15,7 +15,7 @@ export default {
     // show: 是否展示在库区图中
     .add("Inlet", "进料口", 0, { show: true, typeShow: true })
     .add("Outlet", "出料口", 1, { show: true, typeShow: true })
-    .add("Area", "区域", 2, { show: true, typeShow: true })
+    .add("Area", "物料", 2, { show: true, typeShow: true })
     .add("GrabMaterialsArea", "抓料区", 3, { show: true, typeShow: false })
     .add("Wall", "墙", 4, { show: true, typeShow: true })
     .add("Maintain", "检查口", 5, { show: true, typeShow: true })

@@ -6,6 +6,7 @@
     3. 双击节点，可以直接拖动编辑，或者点击节点，可以在表单设置值
     4. 顶部选中哪个类型，可以绘制哪种类型的rect
     5. 可以保存，且保存前要判断是否可提交
+    6. x,y坐标转换
    -->
   <div id="x6" class="app-container x6">
     <!-- 工具栏 -->
@@ -19,6 +20,7 @@
     <div class="canvas-inner">
       <div id="canvas"></div>
     </div>
+    <!-- 表单提交 -->
   </div>
 </template>
 
@@ -63,9 +65,21 @@ export default {
       return this.$utils.objFilter(map, attr => attr.ext.typeShow === true);
     },
   },
+  watch: {
+    mainWidth: {
+      immediate: false,
+      handler(newVal) {
+        if (this.graph) {
+          this.graph.resize(newVal);
+          this.graph.centerContent();
+        }
+      },
+    },
+  },
   // 生命周期 - 挂载完成（访问DOM元素）
   async mounted() {
     await this.getPlayground();
+    this.observe();
     this.init();
     this.addEvent();
   },
@@ -77,7 +91,7 @@ export default {
       // 初始化画布
       this.graph = new Graph({
         container: document.getElementById("canvas"),
-        width: 1200,
+        width: this.mainWidth,
         height: 400,
         background: {
           color: "#fffbe6",
@@ -131,7 +145,7 @@ export default {
             height: item.totalWidth,
             attrs: {
               body: {
-                fill: "#2ECC71",
+                fill: "rgb(0, 174, 255, .25)",
                 stroke: "#000",
                 strokeWidth: 0,
               },
@@ -149,19 +163,6 @@ export default {
       this.graph.centerContent();
       this.graph.zoom(-500);
     },
-    /**
-     * @description 给画布添加事件
-     */
-    addEvent() {
-      // 鼠标移动中
-      this.graph.on("blank:click", ({ _, x, y }) => {
-        this.coordinates = { x, y };
-      });
-      // 鼠标移动中
-      this.graph.on("node:click", ({ _, x, y }) => {
-        this.coordinates = { x, y };
-      });
-    },
     // NOTE: 网络请求
     /**
      * @description 请求库区图纸
@@ -174,6 +175,32 @@ export default {
     },
 
     // NOTE: 事件处理
+    /**
+     * @description 监听 画布 宽度的变化
+     */
+    observe() {
+      const ro = new ResizeObserver(entries => {
+        for (const entry of entries) {
+          const cr = entry.contentRect;
+          this.mainWidth = cr.width;
+        }
+      });
+      ro.observe(document.querySelector(".canvas-inner"));
+    },
+    /**
+     * @description 给画布添加事件
+     */
+    addEvent() {
+      // 鼠标移动中
+      this.graph.on("blank:click", ({ _, x, y }) => {
+        this.coordinates = { x, y };
+      });
+      // 鼠标移动中
+      this.graph.on("node:click", ({ e, x, y, cell, view }) => {
+        this.coordinates = { x, y };
+        console.log({ e, cell, view });
+      });
+    },
     /**
      * @description 监听要绘制的类型
      */

@@ -82,6 +82,7 @@ export default {
       immediate: false,
       handler(newVal) {
         if (this.graph) {
+          console.log(newVal);
           this.graph.resize(newVal.width, newVal.height);
           this.graph.centerContent();
         }
@@ -195,11 +196,12 @@ export default {
         for (const entry of entries) {
           const cr = entry.contentRect;
           // this.mainWidth = cr.width;
-          this.canvas.width = cr.width;
-          this.canvas.height = cr.height;
+          this.canvas.width = cr.width - 200;
+          this.canvas.height = cr.height - 51;
+          console.log(this.canvas);
         }
       });
-      ro.observe(document.querySelector(".canvas-inner"));
+      ro.observe(document.querySelector(".reservoir-config"));
     },
     /**
      * @description 给画布添加事件
@@ -247,6 +249,7 @@ export default {
   }
 
   .edit-inner {
+    width: 100%;
     height: calc(100vh - 84px - 51px);
 
     .canvas-inner {
@@ -258,6 +261,7 @@ export default {
     .config-inner {
       flex-basis: 200px;
       width: 200px;
+      flex-shrink: 0;
     }
   }
 }

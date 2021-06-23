@@ -19,7 +19,9 @@ function hasPermission(roles, route) {
     menu.findIndex(v => v.menuCode === route.name || (route.children && route.children.some(c => c.name === v.menuCode))) > -1 ||
     route.path === "*" ||
     route.path === "/x6" ||
-    route.name === "x6"
+    route.name === "x6" ||
+    route.path === "/reservoir-config" ||
+    route.name === "ReservoirConfig"
   );
 }
 

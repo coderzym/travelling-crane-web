@@ -95,6 +95,18 @@ export const asyncRoutes = [
     ],
   },
   {
+    path: "/reservoir-config",
+    component: Layout,
+    children: [
+      {
+        path: "index",
+        component: () => import("@/views/reservoir-config/index.vue"),
+        name: "ReservoirConfig",
+        meta: { title: "库区定义", icon: "库区定义", affix: false, name: "ReservoirConfig" },
+      },
+    ],
+  },
+  {
     path: "/x6",
     component: Layout,
     children: [

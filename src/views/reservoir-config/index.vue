@@ -13,7 +13,7 @@
     <div class="tools-inner d-flex">
       <div class="header d-flex j-center a-center"> 组件库 </div>
       <div class="tools d-flex j-sb a-center flex-1 mx-2">
-        <el-radio-group v-model="curType" @change="handleMapTypeChange">
+        <el-radio-group>
           <el-radio-button v-for="item in mapTypeObj" :key="item.value" :label="item.value">{{ item.label }}</el-radio-button>
         </el-radio-group>
         <el-tag>x: {{ coordinates.x }}, y: {{ coordinates.y }}</el-tag>
@@ -47,14 +47,15 @@
             <el-input v-model.number="curForm.height"></el-input>
           </el-form-item>
           <!-- 是物料类型，才可展示 -->
-          <el-form-item v-if="curForm.isArea" label="物料类型">
+          <el-form-item v-if="curRect.getData().type === 'area'" label="物料类型">
             <el-radio-group v-model="curForm.areaType">
               <el-radio v-for="item in areaTypeObj" :key="item.value" :label="item.value">{{ item.label }}</el-radio>
             </el-radio-group>
           </el-form-item>
           <el-form-item>
-            <el-button type="primary" @click="onSubmit">更新</el-button>
+            <el-button type="primary" @click="onSubmit(false)">预览</el-button>
             <el-button type="primary" @click="onReset">还原</el-button>
+            <el-button type="primary" @click="onSubmit(true)">更新</el-button>
           </el-form-item>
         </el-form>
       </div>
@@ -69,7 +70,6 @@ import { Graph, Shape } from "@antv/x6";
 import $reservoir from "@/api/reservoir";
 // 枚举
 import enums from "@/utils/enum/index";
-import { isArray } from "@/utils/validate";
 
 const mapEnum = enums.mapEnum;
 const areaEnum = enums.areaEnum;
@@ -98,15 +98,13 @@ export default {
       }, // 位置
       curRect: null, // 当前选中的矩形
       curForm: {
-        name: "",
+        name: "", // 对象名称
         x: 0,
         y: 0,
         width: 0,
         height: 0,
-        areaType: -1,
-        isArea: false,
+        areaType: areaEnum.Material.value, // 物料区类型 (null: 非物料区，0: 物料区, 1:可抓, 2: 可放)
       }, // 当前 form 表单
-      curType: mapEnum.Inlet.value, // 当前选中的类型
       // NOTE: 库区数据
       playground: {}, // 库区数据
     };
@@ -192,11 +190,8 @@ export default {
           enabled: true,
           modifiers: ["ctrl", "meta"],
         }, // 背景缩放
-        // interacting() {
-        //   // 禁止拖动节点
-        //   return { nodeMovable: false };
-        // },
         interacting: function (cellView) {
+          // 设置当前节点能否移动
           if (cellView.cell.getData().disableMove) {
             return { nodeMovable: false };
           }
@@ -226,9 +221,8 @@ export default {
         data: {
           // 自定义属性
           disableMove: true,
-          type: mapEnum.Warehouse.value,
           areaType: null,
-          key: warehouse.type,
+          type: warehouse.type, // rect类型(warehouse/wall/...)
         },
       });
       this.graph.addNode(warehouseRect);
@@ -257,13 +251,11 @@ export default {
             },
             data: {
               disableMove: false,
-              type: mapEnum.Area.value,
               areaType: areaEnum.Material.value, // 物料区，可抓区，可放区
-              key: item.type,
+              type: item.type,
             },
           });
           this.graph.addNode(rect);
-          console.log(rect instanceof Object);
         }
       });
 
@@ -315,11 +307,7 @@ export default {
      * @description 给画布添加事件
      */
     addEvent() {
-      // 鼠标移动中
-      this.graph.on("blank:click", ({ _, x, y }) => {
-        this.coordinates = { x, y };
-      });
-      // 鼠标移动中
+      // 鼠标点击
       this.graph.on("node:click", ({ e, x, y, cell, view }) => {
         this.coordinates = { x, y };
         console.log({ e, cell, view });
@@ -336,24 +324,37 @@ export default {
           width: size.width,
           height: size.height,
           areaType: selfData.areaType,
-          isArea: selfData.type === mapEnum.Area.value,
+        };
+        console.log(this.curRect);
+      });
+      // 鼠标抬起
+      this.graph.on("node:mouseup", ({ e, x, y, cell, view }) => {
+        this.coordinates = { x, y };
+        console.log({ e, cell, view });
+        this.curRect = cell;
+        const {
+          store: {
+            data: { attrs, position, size, data: selfData },
+          },
+        } = this.curRect;
+        this.curForm = {
+          name: attrs.label.text,
+          x: position.x,
+          y: position.y,
+          width: size.width,
+          height: size.height,
+          areaType: selfData.areaType,
         };
         console.log(this.curRect);
       });
     },
     /**
-     * @description 监听要绘制的类型
-     */
-    handleMapTypeChange(value) {
-      this.curType = value;
-    },
-    /**
      * @description 更新数据
      */
-    onSubmit() {
+    onSubmit(isPreview = false) {
       this.$refs["form"].validate(valid => {
         if (valid && this.curRect) {
-          const { x, y, width, height, name, isArea, areaType } = this.curForm;
+          const { x, y, width, height, name, areaType } = this.curForm;
           this.curRect
             .position(x, y)
             .resize(width, height)
@@ -363,9 +364,12 @@ export default {
               },
             })
             .setData({
-              isArea: isArea,
-              areaType: isArea ? areaType : null, // 是物料类型，才有区域类型，否则为null
+              areaType, // 是物料类型，才有区域类型，否则为null
             });
+
+          if (isPreview) {
+            console.log("更新");
+          }
         } else {
           console.log("error submit!!");
           return false;
@@ -376,7 +380,7 @@ export default {
      * @description 还原节点
      */
     onReset() {
-      const key = this.curRect.getData().key;
+      const key = this.curRect.getData().type;
       const origRectData = key === "warehouse" ? this.playground[key] : this.playground[key].find(v => v.name + "-" + v.id === this.curRect.id);
       console.log(origRectData);
       this.curRect
@@ -388,9 +392,22 @@ export default {
           },
         })
         .setData({
-          isArea: origRectData.type === "area",
           areaType: origRectData.type === "area" ? origRectData.isVirtual : null, // 是物料类型，才有区域类型，否则为null
         });
+
+      const {
+        store: {
+          data: { attrs, position, size, data: selfData },
+        },
+      } = this.curRect;
+      this.curForm = {
+        name: attrs.label.text,
+        x: position.x,
+        y: position.y,
+        width: size.width,
+        height: size.height,
+        areaType: selfData.areaType,
+      };
     },
   },
 };

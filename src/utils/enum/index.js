@@ -16,11 +16,12 @@ export default {
     .add("Inlet", "进料口", 0, { show: true, typeShow: true })
     .add("Outlet", "出料口", 1, { show: true, typeShow: true })
     .add("Area", "物料", 2, { show: true, typeShow: true })
-    .add("GrabMaterialsArea", "抓料区", 3, { show: true, typeShow: false })
+    .add("GrabMaterialsArea", "抓料区", 3, { show: true, typeShow: null })
     .add("Wall", "墙", 4, { show: true, typeShow: true })
     .add("Maintain", "检查口", 5, { show: true, typeShow: true })
     .add("Mask", "遮罩", 6, { show: true, typeShow: false })
     .add("Warehouse", "库区", 7, { show: true, typeShow: false }),
+  areaEnum: new Enum().add("Material", "物料区", 0).add("Seize", "可抓区", 1).add("Put", "可放区", 2),
   // // 结果枚举
   // ResultEnum: new Enum().add('SUCCESS', '操作成功', 200).add('ERROR', '操作失败', 400).add('PARAM_ERROR', '参数错误', 405).add(
   // 		'SERVER_ERROR', '服务器异常', 500)

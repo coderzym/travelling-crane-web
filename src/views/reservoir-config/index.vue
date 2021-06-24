@@ -8,7 +8,7 @@
     5. 可以保存，且保存前要判断是否可提交
     6. x,y坐标转换
    -->
-  <div class="reservoir-config">
+  <div class="reservoir-config container">
     <!-- 编辑类型 -->
     <div class="tools-inner d-flex">
       <div class="header d-flex j-center a-center"> 组件库 </div>
@@ -27,7 +27,37 @@
       </div>
 
       <!-- 表单编辑区 -->
-      <div class="config-inner"></div>
+      <div class="config-inner px-2">
+        <h3 class="header">组件信息</h3>
+        <hr />
+        <el-form v-if="curRect" ref="form" :model="curForm" :rules="rules" label-position="top" size="mini">
+          <el-form-item label="名称" prop="name">
+            <el-input v-model="curForm.name"></el-input>
+          </el-form-item>
+          <el-form-item label="x坐标" prop="x">
+            <el-input v-model.number="curForm.x"></el-input>
+          </el-form-item>
+          <el-form-item label="y坐标" prop="y">
+            <el-input v-model.number="curForm.y"></el-input>
+          </el-form-item>
+          <el-form-item label="宽" prop="width">
+            <el-input v-model.number="curForm.width"></el-input>
+          </el-form-item>
+          <el-form-item label="高" prop="height">
+            <el-input v-model.number="curForm.height"></el-input>
+          </el-form-item>
+          <!-- 是物料类型，才可展示 -->
+          <el-form-item v-if="curForm.isArea" label="物料类型">
+            <el-radio-group v-model="curForm.areaType">
+              <el-radio v-for="item in areaTypeObj" :key="item.value" :label="item.value">{{ item.label }}</el-radio>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="onSubmit">更新</el-button>
+            <el-button type="primary" @click="onReset">还原</el-button>
+          </el-form-item>
+        </el-form>
+      </div>
     </div>
   </div>
 </template>
@@ -39,8 +69,10 @@ import { Graph, Shape } from "@antv/x6";
 import $reservoir from "@/api/reservoir";
 // 枚举
 import enums from "@/utils/enum/index";
+import { isArray } from "@/utils/validate";
 
-const map = enums.mapEnum;
+const mapEnum = enums.mapEnum;
+const areaEnum = enums.areaEnum;
 
 export default {
   name: "ReservoirConfig",
@@ -64,8 +96,17 @@ export default {
         width: 0,
         height: 0,
       }, // 位置
-      rect: null, // 正在绘制的矩形
-      curType: map.Inlet.value, // 当前选中的类型
+      curRect: null, // 当前选中的矩形
+      curForm: {
+        name: "",
+        x: 0,
+        y: 0,
+        width: 0,
+        height: 0,
+        areaType: -1,
+        isArea: false,
+      }, // 当前 form 表单
+      curType: mapEnum.Inlet.value, // 当前选中的类型
       // NOTE: 库区数据
       playground: {}, // 库区数据
     };
@@ -73,7 +114,36 @@ export default {
   computed: {
     // 可绘制类型选择
     mapTypeObj() {
-      return this.$utils.objFilter(map, attr => attr.ext.typeShow === true);
+      return this.$utils.objFilter(mapEnum, attr => attr.ext.typeShow === true);
+    },
+    // 抓料区放料区还是物料区
+    areaTypeObj() {
+      return areaEnum;
+    },
+    // 校验
+    rules() {
+      // 检查是否碰撞
+      const checkCollision = (rule, value, callback) => {
+        if (value === "") {
+          return callback(new Error("不能为空"));
+        }
+        if (!Number.isInteger(value)) {
+          callback(new Error("请输入数字值"));
+        } else {
+          if (value % 500 !== 0) {
+            callback(new Error("必须是500的整数倍"));
+          } else {
+            callback();
+          }
+        }
+      };
+      return {
+        name: [{ required: true, message: "请输入名称", trigger: "change" }],
+        x: [{ required: true, validator: checkCollision, trigger: "change" }],
+        y: [{ required: true, validator: checkCollision, trigger: "change" }],
+        width: [{ required: true, validator: checkCollision, trigger: "change" }],
+        height: [{ required: true, validator: checkCollision, trigger: "change" }],
+      };
     },
   },
   watch: {
@@ -89,7 +159,6 @@ export default {
       },
     },
   },
-  // 生命周期 - 挂载完成（访问DOM元素）
   async mounted() {
     await this.getPlayground();
     this.observe();
@@ -123,15 +192,21 @@ export default {
           enabled: true,
           modifiers: ["ctrl", "meta"],
         }, // 背景缩放
-        interacting() {
-          // 禁止拖动节点
-          return { nodeMovable: false };
+        // interacting() {
+        //   // 禁止拖动节点
+        //   return { nodeMovable: false };
+        // },
+        interacting: function (cellView) {
+          if (cellView.cell.getData().disableMove) {
+            return { nodeMovable: false };
+          }
+          return true;
         },
       });
 
       // 库区
       const warehouseRect = new Shape.Rect({
-        id: map.Warehouse.value + warehouse.id,
+        id: warehouse.name + "-" + warehouse.id,
         x: 0,
         y: 0,
         width: warehouse.length,
@@ -142,16 +217,28 @@ export default {
             stroke: "#000",
             strokeWidth: 0,
           },
+          label: {
+            text: warehouse.name,
+            fill: "#333",
+            fontSize: 0,
+          },
+        },
+        data: {
+          // 自定义属性
+          disableMove: true,
+          type: mapEnum.Warehouse.value,
+          areaType: null,
+          key: warehouse.type,
         },
       });
       this.graph.addNode(warehouseRect);
 
-      // 可抓区域
+      // 物料区
       area.forEach(item => {
         // 抓料区
         if (item.parentId === 0) {
           const rect = new Shape.Rect({
-            id: map.Area.value + item.id,
+            id: item.name + "-" + item.id,
             x: item.totalX,
             y: item.totalY,
             width: item.totalLength,
@@ -168,8 +255,15 @@ export default {
                 fontSize: 500 * 2,
               },
             },
+            data: {
+              disableMove: false,
+              type: mapEnum.Area.value,
+              areaType: areaEnum.Material.value, // 物料区，可抓区，可放区
+              key: item.type,
+            },
           });
           this.graph.addNode(rect);
+          console.log(rect instanceof Object);
         }
       });
 
@@ -184,7 +278,20 @@ export default {
       const [err, data] = await $reservoir.getPlayground();
       console.log("获取库区图纸", data);
       if (err) return;
+
+      for (const [key, value] of Object.entries(data)) {
+        if (!Array.isArray(value)) {
+          // 库区
+          value.type = key;
+        } else {
+          // 其他对象
+          value.forEach(v => {
+            v.type = key;
+          });
+        }
+      }
       this.playground = data;
+      console.log(this.playground);
     },
 
     // NOTE: 事件处理
@@ -192,16 +299,17 @@ export default {
      * @description 监听 画布 宽度的变化
      */
     observe() {
+      const container = document.querySelector(".reservoir-config");
+      const toolsRect = document.querySelector(".tools-inner").getBoundingClientRect();
+      const configRect = document.querySelector(".config-inner").getBoundingClientRect();
       const ro = new ResizeObserver(entries => {
         for (const entry of entries) {
           const cr = entry.contentRect;
-          // this.mainWidth = cr.width;
-          this.canvas.width = cr.width - 200;
-          this.canvas.height = cr.height - 51;
-          console.log(this.canvas);
+          this.canvas.width = cr.width - configRect.width;
+          this.canvas.height = cr.height - toolsRect.height - 1;
         }
       });
-      ro.observe(document.querySelector(".reservoir-config"));
+      ro.observe(container);
     },
     /**
      * @description 给画布添加事件
@@ -215,6 +323,22 @@ export default {
       this.graph.on("node:click", ({ e, x, y, cell, view }) => {
         this.coordinates = { x, y };
         console.log({ e, cell, view });
+        this.curRect = cell;
+        const {
+          store: {
+            data: { attrs, position, size, data: selfData },
+          },
+        } = this.curRect;
+        this.curForm = {
+          name: attrs.label.text,
+          x: position.x,
+          y: position.y,
+          width: size.width,
+          height: size.height,
+          areaType: selfData.areaType,
+          isArea: selfData.type === mapEnum.Area.value,
+        };
+        console.log(this.curRect);
       });
     },
     /**
@@ -223,10 +347,60 @@ export default {
     handleMapTypeChange(value) {
       this.curType = value;
     },
+    /**
+     * @description 更新数据
+     */
+    onSubmit() {
+      this.$refs["form"].validate(valid => {
+        if (valid && this.curRect) {
+          const { x, y, width, height, name, isArea, areaType } = this.curForm;
+          this.curRect
+            .position(x, y)
+            .resize(width, height)
+            .attr({
+              label: {
+                text: name,
+              },
+            })
+            .setData({
+              isArea: isArea,
+              areaType: isArea ? areaType : null, // 是物料类型，才有区域类型，否则为null
+            });
+        } else {
+          console.log("error submit!!");
+          return false;
+        }
+      });
+    },
+    /**
+     * @description 还原节点
+     */
+    onReset() {
+      const key = this.curRect.getData().key;
+      const origRectData = key === "warehouse" ? this.playground[key] : this.playground[key].find(v => v.name + "-" + v.id === this.curRect.id);
+      console.log(origRectData);
+      this.curRect
+        .position(origRectData.totalX, origRectData.totalY)
+        .resize(origRectData.totalLength, origRectData.totalWidth)
+        .attr({
+          label: {
+            text: origRectData.name,
+          },
+        })
+        .setData({
+          isArea: origRectData.type === "area",
+          areaType: origRectData.type === "area" ? origRectData.isVirtual : null, // 是物料类型，才有区域类型，否则为null
+        });
+    },
   },
 };
 </script>
 <style lang="scss" scoped>
+// 侧边栏宽度
+$configW: 300px;
+// 顶部工具栏高度（带下边框1px）
+$toolsH: 51px;
+
 .reservoir-config {
   width: 100%;
   height: calc(100vh - 84px);
@@ -240,7 +414,7 @@ export default {
       display: flex;
       flex-basis: 200px;
       width: 200px;
-      font-size: 12px;
+      font-size: 14px;
       font-weight: bolder;
       color: #1890ff;
       background: #f7f9fb;
@@ -250,7 +424,7 @@ export default {
 
   .edit-inner {
     width: 100%;
-    height: calc(100vh - 84px - 51px);
+    height: calc(100vh - 84px - $toolsH);
 
     .canvas-inner {
       flex: 1;
@@ -259,8 +433,8 @@ export default {
     }
 
     .config-inner {
-      flex-basis: 200px;
-      width: 200px;
+      flex-basis: $configW;
+      width: $configW;
       flex-shrink: 0;
     }
   }

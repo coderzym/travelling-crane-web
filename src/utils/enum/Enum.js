@@ -34,6 +34,22 @@ export class Enum {
   }
 
   /**
+   * @description 根据value找field
+   * @param value value值
+   */
+  getFieldByValue(value) {
+    // value不存在返回‘’
+    if (value === undefined || value === null) return "";
+    for (const [key, val] of Object.entries(this)) {
+      if (val.value === value) {
+        return key;
+      }
+    }
+
+    return "";
+  }
+
+  /**
    * @description 根据field找value
    * @param field field字段
    */

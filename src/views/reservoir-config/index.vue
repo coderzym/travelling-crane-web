@@ -13,9 +13,9 @@
     <div class="tools-inner d-flex">
       <div class="header d-flex j-center a-center"> 组件库 </div>
       <div class="tools d-flex j-sb a-center flex-1 mx-2">
-        <el-radio-group>
-          <el-radio-button v-for="item in mapTypeObj" :key="item.value" :label="item.value">{{ item.label }}</el-radio-button>
-        </el-radio-group>
+        <el-button-group>
+          <el-button v-for="item in mapTypeObj" :key="item.value" :data-type="item.value" @mousedown.native="startDrag">{{ item.label }}</el-button>
+        </el-button-group>
         <el-tag>x: {{ coordinates.x }}, y: {{ coordinates.y }}</el-tag>
       </div>
     </div>
@@ -65,7 +65,8 @@
 
 <script>
 // x6库
-import { Graph, Shape } from "@antv/x6";
+import { Graph, Shape, Addon } from "@antv/x6";
+const { Dnd } = Addon; // 拖拽插件
 // 接口
 import $reservoir from "@/api/reservoir";
 // 枚举
@@ -80,6 +81,7 @@ export default {
     return {
       // NOTE: 画布相关
       graph: null, // 画布实例
+      dnd: null, // 拖拽实例
       canvas: {
         width: 0,
         height: 0,
@@ -197,6 +199,21 @@ export default {
           }
           return true;
         },
+        resizing: {
+          enabled: function (Node) {
+            if (!Node.getData().disableMove) {
+              return true;
+            }
+            return false;
+          },
+        },
+      });
+
+      // 实例化拖拽插件
+      this.dnd = new Dnd({
+        target: this.graph,
+        scaled: true,
+        animation: true,
       });
 
       // 库区
@@ -347,6 +364,56 @@ export default {
         };
         console.log(this.curRect);
       });
+      // 缩放
+      this.graph.on("node:resized", ({ e, x, y, cell, view }) => {
+        this.coordinates = { x, y };
+        console.log({ e, cell, view });
+        this.curRect = cell;
+        const {
+          store: {
+            data: { attrs, position, size, data: selfData },
+          },
+        } = this.curRect;
+        this.curForm = {
+          name: attrs.label.text,
+          x: Math.floor(position.x),
+          y: Math.floor(position.y),
+          width: size.width,
+          height: size.height,
+          areaType: selfData.areaType,
+        };
+        console.log(this.curRect);
+      });
+    },
+    /**
+     * @description 开始拖拽
+     */
+    startDrag(e) {
+      const target = e.currentTarget;
+      const type = Number(target.getAttribute("data-type"));
+      console.log({ type, label: mapEnum.getLabelByValue(type) });
+      const node = this.graph.createNode({
+        width: 20000,
+        height: 5000,
+        attrs: {
+          body: {
+            fill: "rgb(0, 174, 255, .25)",
+            stroke: "#000",
+            strokeWidth: 0,
+          },
+          label: {
+            text: mapEnum.getLabelByValue(type),
+            fill: "#333",
+            fontSize: 500 * 2,
+          },
+        },
+        data: {
+          disableMove: false,
+          areaType: type === mapEnum.area.value ? areaEnum.Material.value : null, // 物料区，可抓区，可放区
+          type: mapEnum.getFieldByValue(type),
+        },
+      });
+      this.dnd.start(node, e);
     },
     /**
      * @description 更新数据

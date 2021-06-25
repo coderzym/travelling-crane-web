@@ -235,6 +235,30 @@ export default {
         }
       });
 
+      // 进料口
+      input.forEach(item => {
+        this.graph.addNode({
+          shape: mapEnum.input.field,
+          rawData: { ...item, disableMove: false },
+        });
+      });
+
+      // 出料口
+      output.forEach(item => {
+        this.graph.addNode({
+          shape: mapEnum.output.field,
+          rawData: { ...item, disableMove: false },
+        });
+      });
+
+      // 墙
+      wall.forEach(item => {
+        this.graph.addNode({
+          shape: mapEnum.wall.field,
+          rawData: { ...item, disableMove: false },
+        });
+      });
+
       this.graph.centerContent();
       this.graph.zoom(-500);
     },
@@ -351,7 +375,7 @@ export default {
       let node = null;
       switch (value) {
         case mapEnum.area.value: // 物料区
-          node = this.graph.addNode({
+          node = this.graph.createNode({
             shape: mapEnum.area.field,
             createData: {
               width: 20000,
@@ -360,7 +384,7 @@ export default {
           });
           break;
         case mapEnum.input.value: // 进料口
-          node = this.graph.addNode({
+          node = this.graph.createNode({
             shape: mapEnum.input.field,
             createData: {
               width: 5000,
@@ -369,7 +393,7 @@ export default {
           });
           break;
         case mapEnum.output.value: // 出料口
-          node = this.graph.addNode({
+          node = this.graph.createNode({
             shape: mapEnum.output.field,
             createData: {
               width: 5000,
@@ -378,7 +402,7 @@ export default {
           });
           break;
         case mapEnum.wall.value: // 墙
-          node = this.graph.addNode({
+          node = this.graph.createNode({
             shape: mapEnum.wall.field,
             createData: {
               width: 500,
@@ -387,7 +411,7 @@ export default {
           });
           break;
         case mapEnum.maintain.value: // 检查口
-          node = this.graph.addNode({
+          node = this.graph.createNode({
             shape: mapEnum.maintain.field,
             createData: {
               width: 5000,
@@ -436,17 +460,27 @@ export default {
       const type = this.curRect.getData().type;
       console.log(this.curRect, type);
       const origRectData = type === mapEnum.warehouse.field ? this.playground[type] : this.playground[type].find(v => v.name + "-" + v.id === this.curRect.getData().id);
-      console.log("onReset", { origRectData });
+      console.log("onReset", { origRectData, curRect: this.curRect, type, field: mapEnum.area.field });
+
+      // 库区的 pos 和 size 跟其他类型不同
+      const pos = {
+        x: type === mapEnum.area.field ? origRectData.totalX : origRectData.maxCar,
+        y: type === mapEnum.area.field ? origRectData.totalY : origRectData.minCar,
+      };
+      const s = {
+        width: type === mapEnum.area.field ? origRectData.totalLength : origRectData.length,
+        height: type === mapEnum.area.field ? origRectData.totalWidth : origRectData.width,
+      };
       this.curRect
-        .position(origRectData.totalX, origRectData.totalY)
-        .resize(origRectData.totalLength, origRectData.totalWidth)
+        .position(pos.x, pos.y)
+        .resize(s.width, s.height)
         .attr({
           label: {
             text: origRectData.name,
           },
         })
         .setData({
-          areaType: origRectData.type === "area" ? origRectData.isVirtual : null, // 是物料类型，才有区域类型，否则为null
+          areaType: origRectData.type === mapEnum.area.field ? origRectData.isVirtual : null, // 是物料类型，才有区域类型，否则为null
         });
 
       const {

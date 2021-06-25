@@ -54,8 +54,9 @@
           </el-form-item>
           <el-form-item>
             <el-button type="primary" @click="onSubmit(false)">预览</el-button>
-            <el-button type="primary" @click="onReset">还原</el-button>
-            <el-button type="primary" @click="onSubmit(true)">更新</el-button>
+            <!-- 没有id的，就算是新拖拽下来的 -->
+            <el-button v-if="curRect.getData().id" type="primary" @click="onReset">还原</el-button>
+            <el-button type="primary" @click="onSubmit(true)">确认提交更新</el-button>
           </el-form-item>
         </el-form>
       </div>
@@ -66,6 +67,7 @@
 <script>
 // x6库
 import { Graph, Shape, Addon } from "@antv/x6";
+import "./utils/rect";
 const { Dnd } = Addon; // 拖拽插件
 // 接口
 import $reservoir from "@/api/reservoir";
@@ -217,62 +219,19 @@ export default {
       });
 
       // 库区
-      const warehouseRect = new Shape.Rect({
-        id: warehouse.name + "-" + warehouse.id,
-        x: 0,
-        y: 0,
-        width: warehouse.length,
-        height: warehouse.width,
-        attrs: {
-          body: {
-            fill: "rgba(95,149,255,0.05)",
-            stroke: "#000",
-            strokeWidth: 0,
-          },
-          label: {
-            text: warehouse.name,
-            fill: "#333",
-            fontSize: 0,
-          },
-        },
-        data: {
-          // 自定义属性
-          disableMove: true,
-          areaType: null,
-          type: warehouse.type, // rect类型(warehouse/wall/...)
-        },
+      this.graph.addNode({
+        shape: mapEnum.warehouse.field,
+        rawData: warehouse,
       });
-      this.graph.addNode(warehouseRect);
 
       // 物料区
       area.forEach(item => {
         // 抓料区
         if (item.parentId === 0) {
-          const rect = new Shape.Rect({
-            id: item.name + "-" + item.id,
-            x: item.totalX,
-            y: item.totalY,
-            width: item.totalLength,
-            height: item.totalWidth,
-            attrs: {
-              body: {
-                fill: "rgb(0, 174, 255, .25)",
-                stroke: "#000",
-                strokeWidth: 0,
-              },
-              label: {
-                text: item.name,
-                fill: "#333",
-                fontSize: 500 * 2,
-              },
-            },
-            data: {
-              disableMove: false,
-              areaType: areaEnum.Material.value, // 物料区，可抓区，可放区
-              type: item.type,
-            },
+          this.graph.addNode({
+            shape: mapEnum.area.field,
+            rawData: { ...item, disableMove: false },
           });
-          this.graph.addNode(rect);
         }
       });
 
@@ -327,8 +286,8 @@ export default {
       // 鼠标点击
       this.graph.on("node:click", ({ e, x, y, cell, view }) => {
         this.coordinates = { x, y };
-        console.log({ e, cell, view });
         this.curRect = cell;
+        console.log("addEvent - node:click", { e, cell, view, curRect: this.curRect });
         const {
           store: {
             data: { attrs, position, size, data: selfData },
@@ -342,13 +301,12 @@ export default {
           height: size.height,
           areaType: selfData.areaType,
         };
-        console.log(this.curRect);
       });
       // 鼠标抬起
       this.graph.on("node:mouseup", ({ e, x, y, cell, view }) => {
         this.coordinates = { x, y };
-        console.log({ e, cell, view });
         this.curRect = cell;
+        console.log("addEvent - node:mouseup", { e, cell, view, curRect: this.curRect });
         const {
           store: {
             data: { attrs, position, size, data: selfData },
@@ -362,13 +320,12 @@ export default {
           height: size.height,
           areaType: selfData.areaType,
         };
-        console.log(this.curRect);
       });
       // 缩放
       this.graph.on("node:resized", ({ e, x, y, cell, view }) => {
         this.coordinates = { x, y };
-        console.log({ e, cell, view });
         this.curRect = cell;
+        console.log("addEvent - node:resized", { e, cell, view, curRect: this.curRect });
         const {
           store: {
             data: { attrs, position, size, data: selfData },
@@ -382,7 +339,6 @@ export default {
           height: size.height,
           areaType: selfData.areaType,
         };
-        console.log(this.curRect);
       });
     },
     /**
@@ -390,29 +346,59 @@ export default {
      */
     startDrag(e) {
       const target = e.currentTarget;
-      const type = Number(target.getAttribute("data-type"));
-      console.log({ type, label: mapEnum.getLabelByValue(type) });
-      const node = this.graph.createNode({
-        width: 20000,
-        height: 5000,
-        attrs: {
-          body: {
-            fill: "rgb(0, 174, 255, .25)",
-            stroke: "#000",
-            strokeWidth: 0,
-          },
-          label: {
-            text: mapEnum.getLabelByValue(type),
-            fill: "#333",
-            fontSize: 500 * 2,
-          },
-        },
-        data: {
-          disableMove: false,
-          areaType: type === mapEnum.area.value ? areaEnum.Material.value : null, // 物料区，可抓区，可放区
-          type: mapEnum.getFieldByValue(type),
-        },
-      });
+      const value = Number(target.getAttribute("data-type"));
+
+      let node = null;
+      switch (value) {
+        case mapEnum.area.value: // 物料区
+          node = this.graph.addNode({
+            shape: mapEnum.area.field,
+            createData: {
+              width: 20000,
+              height: 10000,
+            },
+          });
+          break;
+        case mapEnum.input.value: // 进料口
+          node = this.graph.addNode({
+            shape: mapEnum.input.field,
+            createData: {
+              width: 5000,
+              height: 2500,
+            },
+          });
+          break;
+        case mapEnum.output.value: // 出料口
+          node = this.graph.addNode({
+            shape: mapEnum.output.field,
+            createData: {
+              width: 5000,
+              height: 2500,
+            },
+          });
+          break;
+        case mapEnum.wall.value: // 墙
+          node = this.graph.addNode({
+            shape: mapEnum.wall.field,
+            createData: {
+              width: 500,
+              height: 20000,
+            },
+          });
+          break;
+        case mapEnum.maintain.value: // 检查口
+          node = this.graph.addNode({
+            shape: mapEnum.maintain.field,
+            createData: {
+              width: 5000,
+              height: 5000,
+            },
+          });
+          break;
+        default:
+          break;
+      }
+      console.log("startDrag", { node });
       this.dnd.start(node, e);
     },
     /**
@@ -447,9 +433,10 @@ export default {
      * @description 还原节点
      */
     onReset() {
-      const key = this.curRect.getData().type;
-      const origRectData = key === "warehouse" ? this.playground[key] : this.playground[key].find(v => v.name + "-" + v.id === this.curRect.id);
-      console.log(origRectData);
+      const type = this.curRect.getData().type;
+      console.log(this.curRect, type);
+      const origRectData = type === mapEnum.warehouse.field ? this.playground[type] : this.playground[type].find(v => v.name + "-" + v.id === this.curRect.getData().id);
+      console.log("onReset", { origRectData });
       this.curRect
         .position(origRectData.totalX, origRectData.totalY)
         .resize(origRectData.totalLength, origRectData.totalWidth)

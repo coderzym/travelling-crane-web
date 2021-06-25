@@ -14,7 +14,7 @@ export class Enum {
       ext = {};
       ext.className = field;
     }
-    this[field] = { label, value, ext };
+    this[field] = { label, value, ext, field };
     return this;
   }
 

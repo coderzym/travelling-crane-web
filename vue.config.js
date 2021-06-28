@@ -39,7 +39,16 @@ module.exports = {
       warnings: false,
       errors: true,
     },
-    before: require("./mock/mock-server.js"),
+    // proxy: {
+    //   // 这里的api 表示如果我们的请求地址有/api的时候,就出触发代理机制
+    //   "jinghong/api": {
+    //     target: "http://10.248.27.192/icc/jinghong/api",
+    //     changeOrigin: true,
+    //     pathRewrite: {
+    //       "^jinghong/api": "",
+    //     },
+    //   },
+    // },
   },
   configureWebpack: {
     // provide the app's title in webpack's name field, so that

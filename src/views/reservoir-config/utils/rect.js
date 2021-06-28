@@ -6,33 +6,6 @@ import enums from "@/utils/enum/index";
 const mapEnum = enums.mapEnum;
 const areaEnum = enums.areaEnum;
 
-const colorObj = {
-  [mapEnum.warehouse.field]: {
-    fill: "rgba(95,149,255,0.05)",
-    activeFill: "rgba(95,149,255, 1)",
-  },
-  [mapEnum.area.field]: {
-    fill: "rgba(5, 223, 215, .25)",
-    activeFill: "rgba(5, 223, 215, 1)",
-  },
-  [mapEnum.input.field]: {
-    fill: "rgba(163, 247, 191, 0.25)",
-    activeFill: "rgba(163, 247, 191, 1)",
-  },
-  [mapEnum.output.field]: {
-    fill: "rgba(255, 245, 145, 0.25)",
-    activeFill: "rgba(255, 245, 145, 1)",
-  },
-  [mapEnum.wall.field]: {
-    fill: "rgba(232, 211, 255, 0.25)",
-    activeFill: "rgba(232, 211, 255, 1)",
-  },
-  [mapEnum.maintain.field]: {
-    fill: "rgba(255, 150, 66, 0.25)",
-    activeFill: "rgba(255, 150, 66, 1)",
-  },
-};
-
 // NOTE: 总库区
 Shape.Rect.define({
   shape: mapEnum.warehouse.field,

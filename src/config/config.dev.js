@@ -1,6 +1,6 @@
 const appConfigDev = {
   // 开发
-  baseURL: "http://10.248.27.192:8092/icc/api",
+  baseURL: "http://10.248.27.192/icc/jinghong/api",
   redirectURL: "http://hafdev.hxoadev.com/portal/home/app/user.do?tid=M55",
   wsURL: "ws://10.248.27.192:8092/icc/api",
 

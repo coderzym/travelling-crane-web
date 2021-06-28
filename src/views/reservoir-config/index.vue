@@ -76,6 +76,7 @@ const { Dnd } = Addon; // 拖拽插件
 import $reservoir from "@/api/reservoir";
 // 枚举
 import enums from "@/utils/enum/index";
+import { merge } from "@antv/x6/lib/util/object/object";
 
 const mapEnum = enums.mapEnum;
 const areaEnum = enums.areaEnum;
@@ -166,6 +167,7 @@ export default {
     },
   },
   async mounted() {
+    // 获取画布数据
     await this.getPlayground();
     this.observe();
     this.init();
@@ -185,7 +187,7 @@ export default {
           color: "#fffbe6",
         },
         grid: {
-          size: 500, // 网格大小 10px
+          size: this.playground.warehouse.minCarScale, // 网格大小
           visible: true, // 渲染网格背景
           type: "mesh", // 'dot' | 'fixedDot' | 'mesh'
         },
@@ -279,7 +281,7 @@ export default {
       });
 
       this.graph.centerContent();
-      this.graph.zoom(-500);
+      this.graph.zoom(-this.playground.warehouse.minCarScale);
       this.checkAllCollision();
     },
     /**
@@ -349,14 +351,34 @@ export default {
     },
     // NOTE: 网络请求
     /**
-     * @description 请求库区图纸
+     * @description 请求画布数据
+     */
+    async getWareHouseInfo() {
+      const [err, data] = await $reservoir.getBaseWareHouse();
+      console.log("请求画布数据", data);
+      if (err) return;
+      return data;
+    },
+    /**
+     * @description 请求画布内部组件数据
      */
     async getPlayground() {
-      const [err, data] = await $reservoir.getPlayground();
-      console.log("获取库区图纸", data);
-      if (err) return;
+      // 获取画布数据
+      const [outerErr, outerData] = await $reservoir.getBaseWareHouse();
+      console.log("请求画布数据", outerData);
+      if (outerErr) return;
+      // 获取画布内部组件数据
+      const [innerErr, innerData] = await $reservoir.selectArea();
+      console.log("请求画布内部组件数据", innerData);
+      if (innerErr) return;
 
-      for (const [key, value] of Object.entries(data)) {
+      // 合并画布
+      const mergeData = {
+        warehouse: outerData,
+        ...innerData,
+      };
+
+      for (const [key, value] of Object.entries(mergeData)) {
         if (!Array.isArray(value)) {
           // 库区
           value.type = key;
@@ -367,7 +389,7 @@ export default {
           });
         }
       }
-      this.playground = data;
+      this.playground = mergeData;
       console.log(this.playground);
     },
     /**

@@ -9,6 +9,8 @@ const urlLists = {
   getPlayground: "/baseWareHousePlan/queryWarehouse", // 库区图数据
   get3DPlayground: "/baseWareHousePlan/query3DWarehouse", // 3d库区
   editReservoirList: "/baseWareHouse/modifyWareHouse", // 修改库区
+  getBaseWareHouse: "/baseWareHouse/getBaseWareHouse", // 查询总库区信息查询一条
+  selectArea: "/baseArea/selectArea", // 查询库区内部信息
 };
 
 const getReservoirList = params => {
@@ -23,10 +25,18 @@ const get3DPlayground = params => {
 const editReservoirList = params => {
   return request.post(urlLists.editReservoirList, params);
 };
+const getBaseWareHouse = params => {
+  return request.get(urlLists.getBaseWareHouse, params);
+};
+const selectArea = params => {
+  return request.post(urlLists.selectArea, params);
+};
 
 export default {
   getReservoirList,
   getPlayground,
   get3DPlayground,
   editReservoirList,
+  getBaseWareHouse,
+  selectArea,
 };

@@ -1,9 +1,9 @@
 <!-- 页面名：index -->
 <template>
   <!-- 交互
-    1. 没有保存之前，可以随意新增区域。但有重叠的话，矩形会高亮。且没法儿保存
-    2. 点击网格或者节点，顶部可查看当前坐标，方便绘制
-    3. 双击节点，可以直接拖动编辑，或者点击节点，可以在表单设置值
+    1. done 没有保存之前，可以随意新增区域。但有重叠的话，矩形会高亮。且没法儿保存
+    2. done 点击网格或者节点，顶部可查看当前坐标，方便绘制
+    3. done 双击节点，可以直接拖动编辑，或者点击节点，可以在表单设置值
     4. done 顶部选中哪个类型，可以绘制哪种类型的rect
     5. 可以保存，且保存前要判断是否可提交
     6. x,y坐标转换
@@ -55,9 +55,10 @@
           </el-form-item>
           <el-form-item>
             <el-button type="primary" @click="onSubmit(false)">预览</el-button>
+            <el-button type="success" :disabled="haveCollision" @click="onSubmit(true)">保存</el-button>
             <!-- 没有id的，就算是新拖拽下来的 -->
-            <el-button v-if="curRect.getData().id" type="primary" @click="onReset">还原</el-button>
-            <el-button type="primary" @click="onSubmit(true)">确认提交更新</el-button>
+            <el-button v-if="curRect.getData().id" type="info" @click="onReset">还原</el-button>
+            <el-button type="danger" @click="onDelete">删除</el-button>
           </el-form-item>
         </el-form>
         <p v-else>请双击画布中对象进行编辑</p>
@@ -111,6 +112,7 @@ export default {
         height: 0,
         areaType: areaEnum.Material.value, // 物料区类型 (null: 非物料区，0: 物料区, 1:可抓, 2: 可放)
       }, // 当前 form 表单
+      haveCollision: true, // 是否还有碰撞的情况
       // NOTE: 库区数据
       playground: {}, // 库区数据
     };
@@ -123,10 +125,6 @@ export default {
     // 抓料区放料区还是物料区
     areaTypeObj() {
       return areaEnum;
-    },
-    // 检测当前是否有重叠 and 子元素除外（但也得在父元素内）
-    isCollision() {
-      return false;
     },
     // 校验
     rules() {
@@ -222,6 +220,13 @@ export default {
         target: this.graph,
         scaled: true,
         animation: true,
+        getDropNode: newNode => {
+          // 拖拽结束后，检查碰撞
+          setTimeout(() => {
+            this.checkAllCollision();
+          }, 0);
+          return newNode.clone();
+        },
       });
 
       // 库区
@@ -335,6 +340,12 @@ export default {
           });
         }
       }
+
+      // 判断当前是否还有碰撞的情况
+      this.haveCollision = this.graph
+        .getNodes()
+        .filter(node => node.store.data.shape !== mapEnum.warehouse.field)
+        .some(node => node.getData().isCollision === true);
     },
     // NOTE: 网络请求
     /**
@@ -387,7 +398,19 @@ export default {
         }
       });
     },
-
+    // 删除某个rect
+    onDelete() {
+      this.$confirm("此删除操作将永久删除该组件，是否继续？", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
+      }).then(() => {
+        this.$message({
+          type: "success",
+          message: "删除成功！",
+        });
+      });
+    },
     // NOTE: 事件处理
     /**
      * @description 监听 画布 宽度的变化
@@ -413,10 +436,6 @@ export default {
       this.graph.on("node:click", data => {
         this.setCurRectAndCurForm(data, "node:click");
       });
-      // 鼠标移动
-      this.graph.on("node:mousemove", () => {
-        // this.checkAllCollision(); // 性能不佳
-      });
       // 鼠标抬起
       this.graph.on("node:mouseup", data => {
         this.setCurRectAndCurForm(data, "node:mouseup");
@@ -426,6 +445,10 @@ export default {
       this.graph.on("node:resized", data => {
         this.setCurRectAndCurForm(data, "node:resized");
         this.checkAllCollision(); // 鼠标抬起和rect重设大小时，检测
+      });
+      // 右键
+      this.graph.on("node:contextmenu", data => {
+        console.log(data);
       });
     },
     /**
@@ -552,6 +575,8 @@ export default {
         height: size.height,
         areaType: selfData.areaType,
       };
+
+      this.checkAllCollision();
     },
   },
 };

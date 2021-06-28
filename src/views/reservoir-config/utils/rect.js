@@ -59,6 +59,8 @@ Shape.Rect.define({
   data: {
     disableMove: true, // 总库区位置不可移动
     areaType: areaEnum.Material.value,
+    activeFill: "rgb(255, 0, 0, .55)", // 碰撞警告色
+    fill: "rgb(0, 174, 255, .25)",
   },
   // 通过钩子将自定义选项 mapData 上的信息应用到 'attrs/text/text' 和 'data/type' 等属性上
   propHooks: {
@@ -115,6 +117,8 @@ Shape.Rect.define({
   data: {
     disableMove: true, // 总库区位置不可移动
     areaType: null,
+    activeFill: "rgb(255, 0, 0, .55)", // 碰撞警告色
+    fill: "rgb(0, 24, 255, .25)",
   },
   // 通过钩子将自定义选项 mapData 上的信息应用到 'attrs/text/text' 和 'data/type' 等属性上
   propHooks: {
@@ -167,6 +171,8 @@ Shape.Rect.define({
   data: {
     disableMove: true, // 总库区位置不可移动
     areaType: null,
+    activeFill: "rgb(255, 0, 0, .55)", // 碰撞警告色
+    fill: "rgb(0, 125, 155, .25)",
   },
   // 通过钩子将自定义选项 mapData 上的信息应用到 'attrs/text/text' 和 'data/type' 等属性上
   propHooks: {
@@ -219,6 +225,8 @@ Shape.Rect.define({
   data: {
     disableMove: true, // 总库区位置不可移动
     areaType: null,
+    activeFill: "rgb(255, 0, 0, .55)", // 碰撞警告色
+    fill: "rgb(255, 0, 125, .25)",
   },
   // 通过钩子将自定义选项 mapData 上的信息应用到 'attrs/text/text' 和 'data/type' 等属性上
   propHooks: {
@@ -271,6 +279,8 @@ Shape.Rect.define({
   data: {
     disableMove: true, // 总库区位置不可移动
     areaType: null,
+    activeFill: "rgb(255, 0, 0, .55)", // 碰撞警告色
+    fill: "rgb(25, 255, 25, .25)",
   },
   // 通过钩子将自定义选项 mapData 上的信息应用到 'attrs/text/text' 和 'data/type' 等属性上
   propHooks: {

@@ -6,6 +6,33 @@ import enums from "@/utils/enum/index";
 const mapEnum = enums.mapEnum;
 const areaEnum = enums.areaEnum;
 
+const colorObj = {
+  [mapEnum.warehouse.field]: {
+    fill: "rgba(95,149,255,0.05)",
+    activeFill: "rgba(95,149,255, 1)",
+  },
+  [mapEnum.area.field]: {
+    fill: "rgba(5, 223, 215, .25)",
+    activeFill: "rgba(5, 223, 215, 1)",
+  },
+  [mapEnum.input.field]: {
+    fill: "rgba(163, 247, 191, 0.25)",
+    activeFill: "rgba(163, 247, 191, 1)",
+  },
+  [mapEnum.output.field]: {
+    fill: "rgba(255, 245, 145, 0.25)",
+    activeFill: "rgba(255, 245, 145, 1)",
+  },
+  [mapEnum.wall.field]: {
+    fill: "rgba(232, 211, 255, 0.25)",
+    activeFill: "rgba(232, 211, 255, 1)",
+  },
+  [mapEnum.maintain.field]: {
+    fill: "rgba(255, 150, 66, 0.25)",
+    activeFill: "rgba(255, 150, 66, 1)",
+  },
+};
+
 // NOTE: 总库区
 Shape.Rect.define({
   shape: mapEnum.warehouse.field,
@@ -13,7 +40,7 @@ Shape.Rect.define({
   y: 0,
   attrs: {
     body: {
-      fill: "rgba(95,149,255,0.05)",
+      fill: mapEnum.warehouse.ext.fill,
       stroke: "#000",
       strokeWidth: 0,
     },
@@ -47,7 +74,7 @@ Shape.Rect.define({
   shape: mapEnum.area.field,
   attrs: {
     body: {
-      fill: "rgb(0, 174, 255, .25)",
+      fill: mapEnum.area.ext.fill,
       stroke: "#000",
       strokeWidth: 0,
     },
@@ -59,8 +86,6 @@ Shape.Rect.define({
   data: {
     disableMove: true, // 总库区位置不可移动
     areaType: areaEnum.Material.value,
-    activeFill: "rgb(255, 0, 0, .55)", // 碰撞警告色
-    fill: "rgb(0, 174, 255, .25)",
   },
   // 通过钩子将自定义选项 mapData 上的信息应用到 'attrs/text/text' 和 'data/type' 等属性上
   propHooks: {
@@ -105,7 +130,7 @@ Shape.Rect.define({
   shape: mapEnum.input.field,
   attrs: {
     body: {
-      fill: "rgb(0, 24, 255, .25)",
+      fill: mapEnum.input.ext.fill,
       stroke: "#000",
       strokeWidth: 0,
     },
@@ -117,8 +142,6 @@ Shape.Rect.define({
   data: {
     disableMove: true, // 总库区位置不可移动
     areaType: null,
-    activeFill: "rgb(255, 0, 0, .55)", // 碰撞警告色
-    fill: "rgb(0, 24, 255, .25)",
   },
   // 通过钩子将自定义选项 mapData 上的信息应用到 'attrs/text/text' 和 'data/type' 等属性上
   propHooks: {
@@ -159,7 +182,7 @@ Shape.Rect.define({
   shape: mapEnum.output.field,
   attrs: {
     body: {
-      fill: "rgb(0, 125, 155, .25)",
+      fill: mapEnum.output.ext.fill,
       stroke: "#000",
       strokeWidth: 0,
     },
@@ -171,8 +194,6 @@ Shape.Rect.define({
   data: {
     disableMove: true, // 总库区位置不可移动
     areaType: null,
-    activeFill: "rgb(255, 0, 0, .55)", // 碰撞警告色
-    fill: "rgb(0, 125, 155, .25)",
   },
   // 通过钩子将自定义选项 mapData 上的信息应用到 'attrs/text/text' 和 'data/type' 等属性上
   propHooks: {
@@ -213,7 +234,7 @@ Shape.Rect.define({
   shape: mapEnum.wall.field,
   attrs: {
     body: {
-      fill: "rgb(255, 0, 125, .25)",
+      fill: mapEnum.wall.ext.fill,
       stroke: "#000",
       strokeWidth: 0,
     },
@@ -225,8 +246,6 @@ Shape.Rect.define({
   data: {
     disableMove: true, // 总库区位置不可移动
     areaType: null,
-    activeFill: "rgb(255, 0, 0, .55)", // 碰撞警告色
-    fill: "rgb(255, 0, 125, .25)",
   },
   // 通过钩子将自定义选项 mapData 上的信息应用到 'attrs/text/text' 和 'data/type' 等属性上
   propHooks: {
@@ -267,7 +286,7 @@ Shape.Rect.define({
   shape: mapEnum.maintain.field,
   attrs: {
     body: {
-      fill: "rgb(25, 255, 25, .25)",
+      fill: mapEnum.maintain.ext.fill,
       stroke: "#000",
       strokeWidth: 0,
     },
@@ -279,8 +298,6 @@ Shape.Rect.define({
   data: {
     disableMove: true, // 总库区位置不可移动
     areaType: null,
-    activeFill: "rgb(255, 0, 0, .55)", // 碰撞警告色
-    fill: "rgb(25, 255, 25, .25)",
   },
   // 通过钩子将自定义选项 mapData 上的信息应用到 'attrs/text/text' 和 'data/type' 等属性上
   propHooks: {

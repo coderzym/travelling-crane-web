@@ -325,7 +325,7 @@ export default {
             });
             curNode.setAttrs({
               body: {
-                fill: curNode.getData().activeFill,
+                fill: "rgba(255, 0, 0, 0.55)",
               },
             });
             break;
@@ -335,7 +335,7 @@ export default {
           });
           curNode.setAttrs({
             body: {
-              fill: curNode.getData().fill,
+              fill: mapEnum[curNode.store.data.shape].ext.fill,
             },
           });
         }

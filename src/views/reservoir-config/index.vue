@@ -76,7 +76,6 @@ const { Dnd } = Addon; // 拖拽插件
 import $reservoir from "@/api/reservoir";
 // 枚举
 import enums from "@/utils/enum/index";
-import { merge } from "@antv/x6/lib/util/object/object";
 
 const mapEnum = enums.mapEnum;
 const areaEnum = enums.areaEnum;

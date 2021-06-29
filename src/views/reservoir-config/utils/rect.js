@@ -36,6 +36,7 @@ Shape.Rect.define({
         ObjectExt.setByPath(others, "data/id", rawData.name + "-" + rawData.id);
         ObjectExt.setByPath(others, "size/width", rawData.length);
         ObjectExt.setByPath(others, "size/height", rawData.width);
+        ObjectExt.setByPath(others, "data/rawData", { ...rawData, xpos: 0, ypos: 0, xlength: rawData.length, ylength: rawData.width }); // 后台数据存储在这里
       }
       return others;
     },
@@ -73,10 +74,9 @@ Shape.Rect.define({
         ObjectExt.setByPath(others, "position/y", rawData.totalY);
         ObjectExt.setByPath(others, "size/width", rawData.totalLength);
         ObjectExt.setByPath(others, "size/height", rawData.totalWidth);
-        // 设置是否可移动
-        rawData.disableMove !== undefined && ObjectExt.setByPath(others, "data/disableMove", rawData.disableMove);
         // 设置物料区类型
         ObjectExt.setByPath(others, "data/areaType", rawData.areaType);
+        ObjectExt.setByPath(others, "data/rawData", { ...rawData, xpos: rawData.totalX, ypos: rawData.totalY, xlength: rawData.totalLength, ylength: rawData.totalWidth }); // 后台数据存储在这里
       }
       return others;
     },
@@ -92,6 +92,7 @@ Shape.Rect.define({
         ObjectExt.setByPath(others, "data/disableMove", false);
         // 设置物料区类型
         ObjectExt.setByPath(others, "data/areaType", areaEnum.Material.value); // 默认就是物料区 | 物料区类型 (null: 非物料区，0: 物料区, 1:可抓, 2: 可放)
+        ObjectExt.setByPath(others, "data/rawData", createData.formData); // 后台数据存储在这里（初始化）
       }
       return others;
     },
@@ -129,8 +130,7 @@ Shape.Rect.define({
         ObjectExt.setByPath(others, "position/y", rawData.minCar);
         ObjectExt.setByPath(others, "size/width", rawData.length);
         ObjectExt.setByPath(others, "size/height", rawData.width);
-        // 设置是否可移动
-        rawData.disableMove !== undefined && ObjectExt.setByPath(others, "data/disableMove", rawData.disableMove);
+        ObjectExt.setByPath(others, "data/rawData", { ...rawData, xpos: rawData.maxCar, ypos: rawData.minCar, xlength: rawData.length, ylength: rawData.width }); // 后台数据存储在这里
       }
       return others;
     },
@@ -144,6 +144,7 @@ Shape.Rect.define({
         ObjectExt.setByPath(others, "size/height", createData.height);
         // 设置是否可移动
         ObjectExt.setByPath(others, "data/disableMove", false);
+        ObjectExt.setByPath(others, "data/rawData", createData.formData); // 后台数据存储在这里（初始化）
       }
       return others;
     },
@@ -183,6 +184,7 @@ Shape.Rect.define({
         ObjectExt.setByPath(others, "size/height", rawData.width);
         // 设置是否可移动
         rawData.disableMove !== undefined && ObjectExt.setByPath(others, "data/disableMove", rawData.disableMove);
+        ObjectExt.setByPath(others, "data/rawData", { ...rawData, xpos: rawData.maxCar, ypos: rawData.minCar, xlength: rawData.length, ylength: rawData.width }); // 后台数据存储在这里
       }
       return others;
     },
@@ -196,6 +198,7 @@ Shape.Rect.define({
         ObjectExt.setByPath(others, "size/height", createData.height);
         // 设置是否可移动
         ObjectExt.setByPath(others, "data/disableMove", false);
+        ObjectExt.setByPath(others, "data/rawData", createData.formData); // 后台数据存储在这里（初始化）
       }
       return others;
     },
@@ -235,6 +238,7 @@ Shape.Rect.define({
         ObjectExt.setByPath(others, "size/height", rawData.width);
         // 设置是否可移动
         rawData.disableMove !== undefined && ObjectExt.setByPath(others, "data/disableMove", rawData.disableMove);
+        ObjectExt.setByPath(others, "data/rawData", { ...rawData, xpos: rawData.maxCar, ypos: rawData.minCar, xlength: rawData.length, ylength: rawData.width }); // 后台数据存储在这里
       }
       return others;
     },
@@ -248,6 +252,7 @@ Shape.Rect.define({
         ObjectExt.setByPath(others, "size/height", createData.height);
         // 设置是否可移动
         ObjectExt.setByPath(others, "data/disableMove", false);
+        ObjectExt.setByPath(others, "data/rawData", createData.formData); // 后台数据存储在这里（初始化）
       }
       return others;
     },
@@ -287,6 +292,7 @@ Shape.Rect.define({
         ObjectExt.setByPath(others, "size/height", rawData.width);
         // 设置是否可移动
         rawData.disableMove !== undefined && ObjectExt.setByPath(others, "data/disableMove", rawData.disableMove);
+        ObjectExt.setByPath(others, "data/rawData", { ...rawData, xpos: rawData.maxCar, ypos: rawData.minCar, xlength: rawData.length, ylength: rawData.width }); // 后台数据存储在这里
       }
       return others;
     },
@@ -300,6 +306,7 @@ Shape.Rect.define({
         ObjectExt.setByPath(others, "size/height", createData.height);
         // 设置是否可移动
         ObjectExt.setByPath(others, "data/disableMove", false);
+        ObjectExt.setByPath(others, "data/rawData", createData.formData); // 后台数据存储在这里（初始化）
       }
       return others;
     },

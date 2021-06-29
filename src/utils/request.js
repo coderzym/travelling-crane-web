@@ -68,6 +68,10 @@ service.interceptors.request.use(
     if (config.url.includes("/updateBaseMesh")) {
       config.headers.post["Content-Type"] = "application/json;";
     }
+    console.log(config.url);
+    if (config.url.includes("baseArea/save")) {
+      config.headers.post["Content-Type"] = "application/json;";
+    }
 
     // 在发送请求之前做的事情
     // 如果 Vuex 中有token
@@ -163,7 +167,7 @@ request.post = (url, params, baseURL = base) => {
       ? url.includes("/role/list") || url.includes("/user/delUsers") || url.includes("/menu/updateMenu")
         ? qs.stringify(params)
         : params
-      : url.includes("/updateBaseMesh")
+      : url.includes("/updateBaseMesh") || url.includes("baseArea/save")
       ? params
       : qs.stringify(params),
     { baseURL },

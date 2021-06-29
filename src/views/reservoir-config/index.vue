@@ -14,7 +14,7 @@
       <div class="header d-flex j-center a-center"> 组件库 </div>
       <div class="tools d-flex j-sb a-center flex-1 mx-2">
         <el-button-group>
-          <el-button v-for="item in mapTypeObj" :key="item.value" :data-type="item.value" @mousedown.native="startDrag">{{ item.label }}</el-button>
+          <el-button v-for="item in mapTypeFilterObj" :key="item.value" :data-type="item.value" @mousedown.native="startDrag">{{ item.label }}</el-button>
         </el-button-group>
         <el-tag>x: {{ coordinates.x }}, y: {{ coordinates.y }}</el-tag>
       </div>
@@ -61,7 +61,29 @@
             <el-button type="danger" @click="onDelete">删除</el-button>
           </el-form-item>
         </el-form>
-        <p v-else>请双击画布中对象进行编辑</p>
+        <p v-else>请点击画布中对象进行编辑</p>
+        <hr />
+        <el-form v-if="curRect" ref="ruleForm" :model="ruleForm[curRect.store.data.shape]" :rules="formRules" label-position="top" size="mini">
+          <el-form-item v-for="([key, value], idx) in Object.entries(ruleForm[curRect.store.data.shape]).filter(v => v[1].show)" :key="idx" :label="value.label" :prop="key">
+            <el-input v-model="value.value"></el-input>
+          </el-form-item>
+          <!-- 是物料类型，才可展示 -->
+          <el-form-item v-if="curRect.getData().type === mapTypeObj.area.field" label="可抓区域">
+            <el-switch v-model="ruleForm[curRect.store.data.shape].isGrab.value" active-text="可抓" inactive-text="不可抓"> </el-switch>
+          </el-form-item>
+          <el-form-item v-if="curRect.getData().type === mapTypeObj.area.field" label="可放区域">
+            <el-switch v-model="ruleForm[curRect.store.data.shape].isPlace.value" active-text="可放" inactive-text="不可放"> </el-switch>
+          </el-form-item>
+
+          <!-- 表单操作 -->
+          <el-form-item>
+            <el-button type="primary" @click="onSave(true)">预览</el-button>
+            <el-button type="success" :disabled="haveCollision" @click="onSave(false)">保存</el-button>
+            <!-- 没有id的，就算是新拖拽下来的 -->
+            <el-button v-if="curRect.getData().id" type="info" @click="onReset">还原</el-button>
+            <el-button type="danger" @click="onDelete">删除</el-button>
+          </el-form-item>
+        </el-form>
       </div>
     </div>
   </div>
@@ -79,6 +101,86 @@ import enums from "@/utils/enum/index";
 
 const mapEnum = enums.mapEnum;
 const areaEnum = enums.areaEnum;
+
+// 通用表单
+const basicForm = type => {
+  return {
+    groupId: {
+      label: "",
+      value: "",
+      show: false, // 是否展示在表单上
+    }, // 类型矩阵分组
+    name: {
+      label: "名称",
+      value: mapEnum.getLabelByValue(type),
+      show: true, // 是否展示在表单上
+    }, // 名称
+    isGrab: {
+      label: "可抓区",
+      value: false,
+      show: false, // 是否展示在表单上
+    }, // 是否为可抓区域
+    isPlace: {
+      label: "可放区",
+      value: false,
+      show: false, // 是否展示在表单上
+    }, // 是否为可放区域
+    type: {
+      label: "类型",
+      value: type,
+      show: false, // 是否展示在表单上
+    }, // 区分类型 0:墙 1:物料 2:进料口 3:出料口 4:维修
+    typeId: {
+      label: "",
+      value: null,
+      show: false, // 是否展示在表单上
+    }, // 类型对应的id（新增时不需要传递，后端生成）
+    typeName: {
+      label: "",
+      value: null,
+      show: false, // 是否展示在表单上
+    }, // 类型名称（新增时不需要传递，后端生成）
+    xpos: {
+      label: "x坐标",
+      value: 0,
+      show: true, // 是否展示在表单上
+    }, // x轴坐标
+    ypos: {
+      label: "y轴坐标",
+      value: 0,
+      show: true, // 是否展示在表单上
+    }, // y轴坐标
+    xlength: {
+      label: "x轴长度",
+      value: 0,
+      show: true, // 是否展示在表单上
+    }, // x轴长度
+    ylength: {
+      label: "y轴长度",
+      value: 0,
+      show: true, // 是否展示在表单上
+    }, // y轴长度
+  };
+};
+
+const warehouseForm = () => {
+  return { ...basicForm(mapEnum.warehouse.value) }; // 总库区表单
+};
+const areaForm = () => {
+  return { ...basicForm(mapEnum.area.value) }; // 物料表单
+};
+const inputForm = () => {
+  return { ...basicForm(mapEnum.input.value) }; // 进料口表单
+};
+const outputForm = () => {
+  return { ...basicForm(mapEnum.output.value) }; // 出料口表单
+};
+const wallForm = () => {
+  return { ...basicForm(mapEnum.wall.value) }; // 墙表单
+};
+const maintainForm = () => {
+  return { ...basicForm(mapEnum.maintain.value) }; // 检查口表单
+};
 
 export default {
   name: "ReservoirConfig",
@@ -111,6 +213,14 @@ export default {
         width: 0,
         height: 0,
         areaType: areaEnum.Material.value, // 物料区类型 (null: 非物料区，0: 物料区, 1:可抓, 2: 可放)
+      },
+      ruleForm: {
+        [mapEnum.warehouse.field]: warehouseForm(),
+        [mapEnum.area.field]: areaForm(),
+        [mapEnum.input.field]: inputForm(),
+        [mapEnum.output.field]: outputForm(),
+        [mapEnum.wall.field]: wallForm(),
+        [mapEnum.maintain.field]: maintainForm(),
       }, // 当前 form 表单
       haveCollision: true, // 是否还有碰撞的情况
       // NOTE: 库区数据
@@ -118,8 +228,12 @@ export default {
     };
   },
   computed: {
-    // 可绘制类型选择
+    // map类型选择
     mapTypeObj() {
+      return mapEnum;
+    },
+    // 可绘制类型选择
+    mapTypeFilterObj() {
       return this.$utils.objFilter(mapEnum, attr => attr.ext.typeShow === true);
     },
     // 抓料区放料区还是物料区
@@ -149,6 +263,33 @@ export default {
         y: [{ required: true, validator: checkCollision, trigger: "change" }],
         width: [{ required: true, validator: checkCollision, trigger: "change" }],
         height: [{ required: true, validator: checkCollision, trigger: "change" }],
+      };
+    },
+    // 表单验证
+    formRules() {
+      // 检查是否碰撞
+      const checkCollision = (rule, value, callback) => {
+        const val = Number(value.value);
+        console.log(value, val);
+        if (val === "") {
+          return callback(new Error("不能为空"));
+        }
+        if (!Number.isInteger(val)) {
+          callback(new Error("请输入数字值"));
+        } else {
+          if (val % 500 !== 0) {
+            callback(new Error("必须是500的整数倍"));
+          } else {
+            callback();
+          }
+        }
+      };
+      return {
+        name: [{ required: true, message: "请输入名称", trigger: "change" }],
+        xpos: [{ required: true, validator: checkCollision, trigger: "change" }],
+        ypos: [{ required: true, validator: checkCollision, trigger: "change" }],
+        xlength: [{ required: true, validator: checkCollision, trigger: "change" }],
+        ylength: [{ required: true, validator: checkCollision, trigger: "change" }],
       };
     },
   },
@@ -233,7 +374,7 @@ export default {
       // 库区
       this.graph.addNode({
         shape: mapEnum.warehouse.field,
-        rawData: { ...warehouse, disableMove: true },
+        rawData: warehouse,
       });
 
       // 物料区
@@ -242,7 +383,10 @@ export default {
         if (item.parentId === 0) {
           this.graph.addNode({
             shape: mapEnum.area.field,
-            rawData: { ...item, disableMove: false },
+            rawData: item,
+            data: {
+              disableMove: false,
+            },
           });
         }
       });
@@ -251,7 +395,10 @@ export default {
       input.forEach(item => {
         this.graph.addNode({
           shape: mapEnum.input.field,
-          rawData: { ...item, disableMove: false },
+          rawData: item,
+          data: {
+            disableMove: false,
+          },
         });
       });
 
@@ -259,7 +406,10 @@ export default {
       output.forEach(item => {
         this.graph.addNode({
           shape: mapEnum.output.field,
-          rawData: { ...item, disableMove: false },
+          rawData: item,
+          data: {
+            disableMove: false,
+          },
         });
       });
 
@@ -267,7 +417,10 @@ export default {
       wall.forEach(item => {
         this.graph.addNode({
           shape: mapEnum.wall.field,
-          rawData: { ...item, disableMove: false },
+          rawData: item,
+          data: {
+            disableMove: false,
+          },
         });
       });
 
@@ -275,7 +428,10 @@ export default {
       maintain.forEach(item => {
         this.graph.addNode({
           shape: mapEnum.maintain.field,
-          rawData: { ...item, disableMove: false },
+          rawData: item,
+          data: {
+            disableMove: false,
+          },
         });
       });
 
@@ -419,6 +575,48 @@ export default {
         }
       });
     },
+    /**
+     * @description 更新数据
+     */
+    onSave(isPreview = true) {
+      this.$refs["ruleForm"].validate(async valid => {
+        if (valid && this.curRect) {
+          const { xpos, ypos, xlength, ylength, name } = this.ruleForm[this.curRect.store.data.shape];
+          this.curRect
+            .position(Math.floor(xpos.value), Math.floor(ypos.value))
+            .resize(Math.floor(xlength.value), Math.floor(ylength.value))
+            .attr({
+              label: {
+                text: name.value,
+              },
+            });
+          // .setData({
+          //   areaType, // 是物料类型，才有区域类型，否则为null
+          // });
+
+          if (!isPreview) {
+            console.log(
+              "更新",
+              Object.entries(this.ruleForm[this.curRect.store.data.shape]).reduce((obj, cur) => {
+                obj[cur[0]] = cur[1].value;
+                return obj;
+              }, {}),
+            );
+            const params = Object.entries(this.ruleForm[this.curRect.store.data.shape]).reduce((obj, cur) => {
+              obj[cur[0]] = cur[1].value;
+              return obj;
+            }, {});
+            const [err, data] = await $reservoir.save(params);
+            if (!err) {
+              console.log("更新成功", data);
+            }
+          }
+        } else {
+          console.log("error submit!!");
+          return false;
+        }
+      });
+    },
     // 删除某个rect
     onDelete() {
       this.$confirm("此删除操作将永久删除该组件，是否继续？", "提示", {
@@ -492,6 +690,16 @@ export default {
         height: size.height,
         areaType: selfData.areaType,
       };
+      for (const [key, value] of Object.entries(this.curRect.getData().rawData)) {
+        // eslint-disable-next-line no-prototype-builtins
+        if (this.ruleForm[this.curRect.store.data.shape].hasOwnProperty(key)) {
+          this.ruleForm[this.curRect.store.data.shape][key].value = value;
+        }
+      }
+      this.ruleForm[this.curRect.store.data.shape].xpos.value = Math.floor(position.x);
+      this.ruleForm[this.curRect.store.data.shape].ypos.value = Math.floor(position.y);
+      this.ruleForm[this.curRect.store.data.shape].xlength.value = Math.floor(size.width);
+      this.ruleForm[this.curRect.store.data.shape].ylength.value = Math.floor(size.height);
     },
     /**
      * @description 开始拖拽
@@ -508,6 +716,10 @@ export default {
             createData: {
               width: 20000,
               height: 10000,
+              formData: Object.entries(areaForm()).reduce((obj, cur) => {
+                obj[cur[0]] = cur[1].value;
+                return obj;
+              }, {}),
             },
           });
           break;
@@ -517,6 +729,10 @@ export default {
             createData: {
               width: 5000,
               height: 2500,
+              formData: Object.entries(inputForm()).reduce((obj, cur) => {
+                obj[cur[0]] = cur[1].value;
+                return obj;
+              }, {}),
             },
           });
           break;
@@ -526,6 +742,10 @@ export default {
             createData: {
               width: 5000,
               height: 2500,
+              formData: Object.entries(outputForm()).reduce((obj, cur) => {
+                obj[cur[0]] = cur[1].value;
+                return obj;
+              }, {}),
             },
           });
           break;
@@ -535,6 +755,10 @@ export default {
             createData: {
               width: 500,
               height: 20000,
+              formData: Object.entries(wallForm()).reduce((obj, cur) => {
+                obj[cur[0]] = cur[1].value;
+                return obj;
+              }, {}),
             },
           });
           break;
@@ -544,6 +768,10 @@ export default {
             createData: {
               width: 5000,
               height: 5000,
+              formData: Object.entries(maintainForm()).reduce((obj, cur) => {
+                obj[cur[0]] = cur[1].value;
+                return obj;
+              }, {}),
             },
           });
           break;
@@ -631,7 +859,7 @@ $toolsH: 51px;
 
   .edit-inner {
     width: 100%;
-    height: calc(100vh - 84px - $toolsH);
+    height: calc(100vh - 84px - #{$toolsH});
 
     .canvas-inner {
       flex: 1;
@@ -643,6 +871,7 @@ $toolsH: 51px;
       flex-basis: $configW;
       width: $configW;
       flex-shrink: 0;
+      overflow-y: auto;
     }
   }
 }

@@ -11,6 +11,7 @@ const urlLists = {
   editReservoirList: "/baseWareHouse/modifyWareHouse", // 修改库区
   getBaseWareHouse: "/baseWareHouse/getBaseWareHouse", // 查询总库区信息查询一条
   selectArea: "/baseArea/selectArea", // 查询库区内部信息
+  save: "/baseArea/save", // 区域编辑
 };
 
 const getReservoirList = params => {
@@ -31,6 +32,9 @@ const getBaseWareHouse = params => {
 const selectArea = params => {
   return request.post(urlLists.selectArea, params);
 };
+const save = params => {
+  return request.post(urlLists.save, params);
+};
 
 export default {
   getReservoirList,
@@ -39,4 +43,5 @@ export default {
   editReservoirList,
   getBaseWareHouse,
   selectArea,
+  save,
 };

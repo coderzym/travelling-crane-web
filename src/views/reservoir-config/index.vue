@@ -31,7 +31,7 @@
         <h3 class="header">组件信息</h3>
         <hr />
         <!-- 选中要编辑的rect，才显示表单 -->
-        <el-form v-if="curRect" ref="form" :model="curForm" :rules="rules" label-position="top" size="mini">
+        <!-- <el-form v-if="curRect" ref="form" :model="curForm" :rules="rules" label-position="top" size="mini">
           <el-form-item label="名称" prop="name">
             <el-input v-model="curForm.name"></el-input>
           </el-form-item>
@@ -47,32 +47,30 @@
           <el-form-item label="高" prop="height">
             <el-input v-model.number="curForm.height"></el-input>
           </el-form-item>
-          <!-- 是物料类型，才可展示 -->
-          <el-form-item v-if="curRect.getData().type === 'area'" label="物料类型">
-            <el-radio-group v-model="curForm.areaType">
-              <el-radio v-for="item in areaTypeObj" :key="item.value" :label="item.value">{{ item.label }}</el-radio>
-            </el-radio-group>
-          </el-form-item>
           <el-form-item>
             <el-button type="primary" @click="onSubmit(false)">预览</el-button>
             <el-button type="success" :disabled="haveCollision" @click="onSubmit(true)">保存</el-button>
-            <!-- 没有id的，就算是新拖拽下来的 -->
             <el-button v-if="curRect.getData().id" type="info" @click="onReset">还原</el-button>
             <el-button type="danger" @click="onDelete">删除</el-button>
           </el-form-item>
-        </el-form>
-        <p v-else>请点击画布中对象进行编辑</p>
-        <hr />
+        </el-form> -->
+
         <el-form v-if="curRect" ref="ruleForm" :model="ruleForm[curRect.store.data.shape]" :rules="formRules" label-position="top" size="mini">
-          <el-form-item v-for="([key, value], idx) in Object.entries(ruleForm[curRect.store.data.shape]).filter(v => v[1].show)" :key="idx" :label="value.label" :prop="key">
+          <el-form-item v-for="([key, value], idx) in Object.entries(ruleForm[curRect.store.data.shape]).filter(v => v[1].show)" :key="idx" :label="value.label + '：'" :prop="key">
             <el-input v-model="value.value"></el-input>
           </el-form-item>
           <!-- 是物料类型，才可展示 -->
-          <el-form-item v-if="curRect.getData().type === mapTypeObj.area.field" label="可抓区域">
-            <el-switch v-model="ruleForm[curRect.store.data.shape].isGrab.value" active-text="可抓" inactive-text="不可抓"> </el-switch>
+          <el-form-item v-if="curRect.getData().type === mapTypeObj.area.field" label="可抓区域：">
+            <el-switch v-model="ruleForm[curRect.store.data.shape].isGrab.value" active-text="否" inactive-text="是"></el-switch>
           </el-form-item>
-          <el-form-item v-if="curRect.getData().type === mapTypeObj.area.field" label="可放区域">
-            <el-switch v-model="ruleForm[curRect.store.data.shape].isPlace.value" active-text="可放" inactive-text="不可放"> </el-switch>
+          <el-form-item v-if="curRect.getData().type === mapTypeObj.area.field" label="可放区域：">
+            <el-switch v-model="ruleForm[curRect.store.data.shape].isPlace.value" active-text="否" inactive-text="是"></el-switch>
+          </el-form-item>
+          <!-- 是可抓可放，就展示物料区的select选择框 -->
+          <el-form-item v-if="ruleForm[curRect.store.data.shape].isGrab.value || ruleForm[curRect.store.data.shape].isPlace.value" label="所属已维护物料区：">
+            <el-select v-model="ruleForm[curRect.store.data.shape].typeId.value" placeholder="请选择物料区" @change="addToParentNode">
+              <el-option v-for="item in areasNode" :key="item.id" :label="item.store.data.attrs.label.text" :value="item.getData().rawData.typeId"></el-option>
+            </el-select>
           </el-form-item>
 
           <!-- 表单操作 -->
@@ -84,6 +82,7 @@
             <el-button type="danger" @click="onDelete">删除</el-button>
           </el-form-item>
         </el-form>
+        <p v-else>请点击画布中对象进行编辑</p>
       </div>
     </div>
   </div>
@@ -100,7 +99,6 @@ import $reservoir from "@/api/reservoir";
 import enums from "@/utils/enum/index";
 
 const mapEnum = enums.mapEnum;
-const areaEnum = enums.areaEnum;
 
 // 通用表单
 const basicForm = type => {
@@ -160,6 +158,11 @@ const basicForm = type => {
       value: 0,
       show: true, // 是否展示在表单上
     }, // y轴长度
+    needDelete: {
+      label: "是否需要删除",
+      value: false,
+      show: false,
+    }, // 是否需要删除
   };
 };
 
@@ -212,7 +215,7 @@ export default {
         y: 0,
         width: 0,
         height: 0,
-        areaType: areaEnum.Material.value, // 物料区类型 (null: 非物料区，0: 物料区, 1:可抓, 2: 可放)
+        // areaType: areaEnum.Material.value, // 物料区类型 (null: 非物料区，0: 物料区, 1:可抓, 2: 可放)
       },
       ruleForm: {
         [mapEnum.warehouse.field]: warehouseForm(),
@@ -236,9 +239,12 @@ export default {
     mapTypeFilterObj() {
       return this.$utils.objFilter(mapEnum, attr => attr.ext.typeShow === true);
     },
-    // 抓料区放料区还是物料区
-    areaTypeObj() {
-      return areaEnum;
+    // 已维护了的物料区
+    areasNode() {
+      const curId = this.curRect.id;
+      return this.graph
+        .getCells()
+        .filter(v => v.store.data.shape === mapEnum.area.field && v.getData().rawData.typeId && !v.getData().rawData.isGrab && !v.getData().rawData.isPlace && v.id !== curId);
     },
     // 校验
     rules() {
@@ -305,19 +311,45 @@ export default {
         }
       },
     },
+    ruleForm: {
+      deep: true,
+      immediate: false,
+      handler(newVal) {
+        if (!this.curRect) return;
+        const { xpos, ypos, xlength, ylength, name } = newVal[this.curRect.store.data.shape];
+        const rawData = Object.entries(newVal[this.curRect.store.data.shape]).reduce((obj, cur) => {
+          obj[cur[0]] = cur[1].value;
+          return obj;
+        }, {});
+        console.log(rawData);
+        this.curRect
+          .position(Math.floor(xpos.value), Math.floor(ypos.value))
+          .resize(Math.floor(xlength.value), Math.floor(ylength.value))
+          .attr({
+            label: {
+              text: name.value,
+            },
+          })
+          .setData({
+            rawData,
+          });
+      },
+    },
   },
   async mounted() {
     // 获取画布数据
     await this.getPlayground();
     this.observe();
-    this.init();
+    this.initCanvas();
     this.addEvent();
   },
   methods: {
+    async refresh() {
+      await this.getPlayground();
+      this.updateChildren();
+    },
     // NOTE: 库区图绘制相关
-    init() {
-      const { area, input, output, wall, warehouse, maintain } = this.playground;
-
+    initCanvas() {
       // 初始化画布
       this.graph = new Graph({
         container: document.getElementById("canvas"),
@@ -367,10 +399,27 @@ export default {
           setTimeout(() => {
             this.checkAllCollision();
           }, 0);
-          return newNode.clone();
+          const cloneNode = newNode.clone();
+          console.log(cloneNode);
+          // this.curRect = cloneNode;
+          return cloneNode;
         },
       });
 
+      // 更新画布成员
+      this.updateChildren();
+
+      this.graph.centerContent();
+      this.graph.zoom(-this.playground.warehouse.minCarScale);
+      this.checkAllCollision();
+    },
+    /**
+     * @description 更新画布
+     */
+    updateChildren() {
+      // 先清空画布
+      this.graph.clearCells();
+      const { area, input, output, wall, warehouse, maintain } = this.playground;
       // 库区
       this.graph.addNode({
         shape: mapEnum.warehouse.field,
@@ -380,15 +429,13 @@ export default {
       // 物料区
       area.forEach(item => {
         // 抓料区
-        if (item.parentId === 0) {
-          this.graph.addNode({
-            shape: mapEnum.area.field,
-            rawData: item,
-            data: {
-              disableMove: false,
-            },
-          });
-        }
+        this.graph.addNode({
+          shape: mapEnum.area.field,
+          rawData: item,
+          data: {
+            disableMove: false,
+          },
+        });
       });
 
       // 进料口
@@ -434,10 +481,6 @@ export default {
           },
         });
       });
-
-      this.graph.centerContent();
-      this.graph.zoom(-this.playground.warehouse.minCarScale);
-      this.checkAllCollision();
     },
     /**
      * @description 检测两个 rect 是否碰撞（重叠）
@@ -475,7 +518,11 @@ export default {
             size: { width, height },
           } = inner.store.data;
           const innerRect = { x, y, width, height };
-          // 如果id不同，且检测到碰撞，则设置为碰撞
+          // 1. 如果id不同，且检测到碰撞，则设置碰撞属性为真
+          // 2. 如果当前rect为可抓或者可放区域，则必须在自己所在物料区内部
+          // 3. 每次选中某个node，curRect会根据node更新，rulesForm也会更新。
+          //  3.1 如果是新增的，直接更新可抓区域不可抓区域，typeId；
+          //  3.2 如果是已有的，
           if (curNode.id !== inner.id && inner.store.data.shape !== mapEnum.warehouse.field && this.checkCollision(curRect, innerRect)) {
             curNode.setData({
               isCollision: true,
@@ -533,17 +580,6 @@ export default {
         ...innerData,
       };
 
-      for (const [key, value] of Object.entries(mergeData)) {
-        if (!Array.isArray(value)) {
-          // 库区
-          value.type = key;
-        } else {
-          // 其他对象
-          value.forEach(v => {
-            v.type = key;
-          });
-        }
-      }
       this.playground = mergeData;
       console.log(this.playground);
     },
@@ -553,7 +589,7 @@ export default {
     onSubmit(isPreview = false) {
       this.$refs["form"].validate(valid => {
         if (valid && this.curRect) {
-          const { x, y, width, height, name, areaType } = this.curForm;
+          const { x, y, width, height, name } = this.curForm;
           this.curRect
             .position(x, y)
             .resize(width, height)
@@ -561,10 +597,10 @@ export default {
               label: {
                 text: name,
               },
-            })
-            .setData({
-              areaType, // 是物料类型，才有区域类型，否则为null
             });
+          // .setData({
+          //   areaType, // 是物料类型，才有区域类型，否则为null
+          // });
 
           if (isPreview) {
             console.log("更新");
@@ -579,6 +615,14 @@ export default {
      * @description 更新数据
      */
     onSave(isPreview = true) {
+      /**
+       *  实时更新node和表单
+       *  拖动node，更新node和表单
+       *  更改表单，更新node
+       *  添加重置按钮，每次重置，把原始数据覆盖到node和表单上
+       *  如果是新增的node，重置时把node和form还原到初始状态
+       */
+
       this.$refs["ruleForm"].validate(async valid => {
         if (valid && this.curRect) {
           const { xpos, ypos, xlength, ylength, name } = this.ruleForm[this.curRect.store.data.shape];
@@ -602,13 +646,39 @@ export default {
                 return obj;
               }, {}),
             );
-            const params = Object.entries(this.ruleForm[this.curRect.store.data.shape]).reduce((obj, cur) => {
-              obj[cur[0]] = cur[1].value;
-              return obj;
-            }, {});
-            const [err, data] = await $reservoir.save(params);
+            // const params = Object.entries(this.ruleForm[this.curRect.store.data.shape]).reduce((obj, cur) => {
+            //   obj[cur[0]] = cur[1].value;
+            //   return obj;
+            // }, {});
+            const params = this.graph
+              .getCells()
+              .filter(v => v.store.data.shape !== mapEnum.warehouse.field)
+              .map(v => {
+                return {
+                  ...v.getData().rawData,
+                  xpos: v.store.data.position.x,
+                  ypos: v.store.data.position.y,
+                  xlength: v.store.data.size.width,
+                  ylength: v.store.data.size.height,
+                };
+              });
+            const [err] = await $reservoir.save(params);
             if (!err) {
-              console.log("更新成功", data);
+              // 重置
+              this.ruleForm = {
+                [mapEnum.warehouse.field]: warehouseForm(),
+                [mapEnum.area.field]: areaForm(),
+                [mapEnum.input.field]: inputForm(),
+                [mapEnum.output.field]: outputForm(),
+                [mapEnum.wall.field]: wallForm(),
+                [mapEnum.maintain.field]: maintainForm(),
+              };
+              this.curRect = null;
+              this.$message({
+                message: "更新成功！",
+                type: "success",
+              });
+              this.refresh();
             }
           }
         } else {
@@ -624,6 +694,9 @@ export default {
         cancelButtonText: "取消",
         type: "warning",
       }).then(() => {
+        this.ruleForm[this.curRect.store.data.shape].needDelete.value = true;
+        this.curRect.getData().rawData.needDelete = true;
+        this.onSave(false);
         this.$message({
           type: "success",
           message: "删除成功！",
@@ -679,7 +752,7 @@ export default {
       console.log("addEvent - " + type, { e, cell, view, curRect: this.curRect });
       const {
         store: {
-          data: { attrs, position, size, data: selfData },
+          data: { attrs, position, size },
         },
       } = this.curRect;
       this.curForm = {
@@ -688,7 +761,6 @@ export default {
         y: Math.floor(position.y),
         width: size.width,
         height: size.height,
-        areaType: selfData.areaType,
       };
       for (const [key, value] of Object.entries(this.curRect.getData().rawData)) {
         // eslint-disable-next-line no-prototype-builtins
@@ -700,6 +772,7 @@ export default {
       this.ruleForm[this.curRect.store.data.shape].ypos.value = Math.floor(position.y);
       this.ruleForm[this.curRect.store.data.shape].xlength.value = Math.floor(size.width);
       this.ruleForm[this.curRect.store.data.shape].ylength.value = Math.floor(size.height);
+      console.log(this.ruleForm, this.curRect.getData().rawData);
     },
     /**
      * @description 开始拖拽
@@ -713,65 +786,65 @@ export default {
         case mapEnum.area.value: // 物料区
           node = this.graph.createNode({
             shape: mapEnum.area.field,
-            createData: {
-              width: 20000,
-              height: 10000,
-              formData: Object.entries(areaForm()).reduce((obj, cur) => {
+            rawData: {
+              ...Object.entries(areaForm()).reduce((obj, cur) => {
                 obj[cur[0]] = cur[1].value;
                 return obj;
               }, {}),
+              xlength: 20000,
+              ylength: 10000,
             },
           });
           break;
         case mapEnum.input.value: // 进料口
           node = this.graph.createNode({
             shape: mapEnum.input.field,
-            createData: {
-              width: 5000,
-              height: 2500,
-              formData: Object.entries(inputForm()).reduce((obj, cur) => {
+            rawData: {
+              ...Object.entries(inputForm()).reduce((obj, cur) => {
                 obj[cur[0]] = cur[1].value;
                 return obj;
               }, {}),
+              xlength: 5000,
+              ylength: 2500,
             },
           });
           break;
         case mapEnum.output.value: // 出料口
           node = this.graph.createNode({
             shape: mapEnum.output.field,
-            createData: {
-              width: 5000,
-              height: 2500,
-              formData: Object.entries(outputForm()).reduce((obj, cur) => {
+            rawData: {
+              ...Object.entries(outputForm()).reduce((obj, cur) => {
                 obj[cur[0]] = cur[1].value;
                 return obj;
               }, {}),
+              xlength: 5000,
+              ylength: 2500,
             },
           });
           break;
         case mapEnum.wall.value: // 墙
           node = this.graph.createNode({
             shape: mapEnum.wall.field,
-            createData: {
-              width: 500,
-              height: 20000,
-              formData: Object.entries(wallForm()).reduce((obj, cur) => {
+            rawData: {
+              ...Object.entries(wallForm()).reduce((obj, cur) => {
                 obj[cur[0]] = cur[1].value;
                 return obj;
               }, {}),
+              xlength: 500,
+              ylength: 20000,
             },
           });
           break;
         case mapEnum.maintain.value: // 检查口
           node = this.graph.createNode({
             shape: mapEnum.maintain.field,
-            createData: {
-              width: 5000,
-              height: 5000,
-              formData: Object.entries(maintainForm()).reduce((obj, cur) => {
+            rawData: {
+              ...Object.entries(maintainForm()).reduce((obj, cur) => {
                 obj[cur[0]] = cur[1].value;
                 return obj;
               }, {}),
+              xlength: 5000,
+              ylength: 5000,
             },
           });
           break;
@@ -782,50 +855,62 @@ export default {
       this.dnd.start(node, e);
     },
     /**
+     * @description 添加当前区域到物料区
+     * @param {string} 区域的typeId
+     */
+    addToParentNode(typeId) {
+      // 找到所选物料区
+      const parentNode = this.graph
+        .getCells()
+        .filter(v => v.store.data.shape === mapEnum.area.field && v.getData().rawData.typeId === typeId && !v.getData().rawData.isGrab && !v.getData().rawData.isPlace)[0];
+      // 添加到目标物料区
+      parentNode.addChild(this.curRect);
+
+      // 如果curRect没有typeId，代表新增，则实时更新node数据
+      // !this.curRect.getData().rawData.typeId && (this.curRect.getData().rawData.typeId = typeId);
+    },
+    /**
      * @description 还原节点
      */
     onReset() {
-      const type = this.curRect.getData().type;
-      console.log(this.curRect, type);
-      const origRectData = type === mapEnum.warehouse.field ? this.playground[type] : this.playground[type].find(v => v.name + "-" + v.id === this.curRect.getData().id);
-      console.log("onReset", { origRectData, curRect: this.curRect, type, field: mapEnum.area.field });
-
-      // 库区的 pos 和 size 跟其他类型不同
-      const pos = {
-        x: type === mapEnum.area.field ? origRectData.totalX : origRectData.maxCar,
-        y: type === mapEnum.area.field ? origRectData.totalY : origRectData.minCar,
-      };
-      const s = {
-        width: type === mapEnum.area.field ? origRectData.totalLength : origRectData.length,
-        height: type === mapEnum.area.field ? origRectData.totalWidth : origRectData.width,
-      };
-      this.curRect
-        .position(pos.x, pos.y)
-        .resize(s.width, s.height)
-        .attr({
-          label: {
-            text: origRectData.name,
-          },
-        })
-        .setData({
-          areaType: origRectData.type === mapEnum.area.field ? origRectData.isVirtual : null, // 是物料类型，才有区域类型，否则为null
-        });
-
-      const {
-        store: {
-          data: { attrs, position, size, data: selfData },
-        },
-      } = this.curRect;
-      this.curForm = {
-        name: attrs.label.text,
-        x: position.x,
-        y: position.y,
-        width: size.width,
-        height: size.height,
-        areaType: selfData.areaType,
-      };
-
-      this.checkAllCollision();
+      // const type = this.curRect.getData().type;
+      // console.log(this.curRect, type);
+      // const origRectData = type === mapEnum.warehouse.field ? this.playground[type] : this.playground[type].find(v => v.name + "-" + v.id === this.curRect.getData().id);
+      // console.log("onReset", { origRectData, curRect: this.curRect, type, field: mapEnum.area.field });
+      // // 库区的 pos 和 size 跟其他类型不同
+      // const pos = {
+      //   x: type === mapEnum.area.field ? origRectData.totalX : origRectData.maxCar,
+      //   y: type === mapEnum.area.field ? origRectData.totalY : origRectData.minCar,
+      // };
+      // const s = {
+      //   width: type === mapEnum.area.field ? origRectData.totalLength : origRectData.length,
+      //   height: type === mapEnum.area.field ? origRectData.totalWidth : origRectData.width,
+      // };
+      // this.curRect
+      //   .position(pos.x, pos.y)
+      //   .resize(s.width, s.height)
+      //   .attr({
+      //     label: {
+      //       text: origRectData.name,
+      //     },
+      //   });
+      // // .setData({
+      // //   areaType: origRectData.type === mapEnum.area.field ? origRectData.isVirtual : null, // 是物料类型，才有区域类型，否则为null
+      // // });
+      // const {
+      //   store: {
+      //     data: { attrs, position, size },
+      //   },
+      // } = this.curRect;
+      // this.curForm = {
+      //   name: attrs.label.text,
+      //   x: position.x,
+      //   y: position.y,
+      //   width: size.width,
+      //   height: size.height,
+      //   // areaType: selfData.areaType,
+      // };
+      // this.checkAllCollision();
     },
   },
 };

@@ -67,11 +67,10 @@
           </el-form-item>
           <!-- 表单操作 -->
           <el-form-item>
-            <!-- <el-button type="primary" @click="onSave(true)">预览</el-button> -->
             <el-button type="success" :disabled="haveCollision" @click="onSave(false)">保存</el-button>
             <!-- 没有id的，就算是新拖拽下来的 -->
             <el-button v-if="curRect.getData().rawData.groupId" type="info" @click="onReset">还原</el-button>
-            <el-button type="danger" @click="onDelete">删除</el-button>
+            <el-button v-show="curRect.getData().rawData.groupId" type="danger" @click="onDelete">删除</el-button>
           </el-form-item>
         </el-form>
         <p v-else>请点击画布中对象进行编辑</p>
@@ -745,6 +744,7 @@ export default {
      */
     setCurRectAndCurForm({ e, x, y, cell, view }, type) {
       this.coordinates = { x, y };
+      if (cell.store.data.shape === mapEnum.warehouse.field) return;
       this.curRect = cell;
       console.log("addEvent - " + type, { e, cell, view, curRect: this.curRect });
       const {

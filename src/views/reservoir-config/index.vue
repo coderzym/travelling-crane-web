@@ -425,7 +425,7 @@ export default {
             data: {
               disableMove: false,
             },
-            zIndex: 1,
+            zIndex: 100,
           });
           parent.addChild(child);
         });

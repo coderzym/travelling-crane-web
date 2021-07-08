@@ -590,12 +590,14 @@ export default {
       console.log("请求画布内部组件数据", innerData);
       if (innerErr) return;
 
+      // 组装最后父子结构的areas
+      let areas = [];
       // 物料区根据parentId区分从属关系，parentId为type+typeId值之和
       for (let [key, value] of Object.entries(innerData)) {
-        console.log(key, value);
         if (key === mapEnum.area.field) {
           const parents = value.filter(v => !v.parentId);
           let children = value.filter(v => v.parentId);
+          console.log(parents, children);
           parents.forEach(p => {
             p.children = [];
             let idx = children.findIndex(v => v.parentId === p.type + "," + p.typeId);
@@ -605,9 +607,10 @@ export default {
               children.splice(idx, 1);
             }
           });
-          value = parents;
+          areas = parents;
         }
       }
+      innerData[mapEnum.area.field] = areas || [];
       // 合并画布
       const mergeData = {
         warehouse: outerData,
